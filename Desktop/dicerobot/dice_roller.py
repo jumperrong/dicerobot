@@ -119,11 +119,11 @@ def parse_roll_expression(expr: str) -> Tuple[List[Tuple[int, int, int, str, int
             
         # 如果不是嵌套表达式，按普通表达式处理
         # 默认值
-        num_dice = 1
+        num_dice = 1    # 默认骰子数
         num_faces = 100  # 默认100面骰
-        modifier = 0
-        advantage = ''
-        adv_dice = 0
+        modifier = 0     # 默认调整值
+        advantage = ''  # 默认无优势/劣势
+        adv_dice = 0    # 默认无优势/劣势骰子数
         
         # 使用正则表达式解析
         # 格式: [次数]d[面数][优势类型][优势骰子数][+-调整值]
