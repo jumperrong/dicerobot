@@ -1,0 +1,41 @@
+# 基础配置
+bot:
+  name: "骰子机器人"
+  version: "1.0.0"
+
+# 文件路径配置
+files:
+  dnd_data: "DND5E23_4_2.json"
+  log_file: "robot.log"
+  deck_path: "decks"  # 牌堆文件存放目录
+
+# 日志配置
+logging:
+  level: "DEBUG"
+  format: "%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s"
+
+# 微信消息显示配置
+message_display:
+  # 消息类型配置 (默认只显示文本消息和系统消息)
+  type_1: true     # 文本消息
+  type_3: false    # 图片消息
+  type_34: false   # 语音消息
+  type_43: false   # 视频消息
+  type_42: false   # 名片消息
+  type_48: false   # 位置消息
+  type_47: false   # 表情消息
+  type_49: false   # 文件消息
+  type_37: false   # 好友确认消息
+  type_40: false   # POSSIBLEFRIEND_MSG
+  type_41: false   # 微信名片消息
+  type_44: false   # 视频通话消息
+  type_50: false   # 语音通话消息
+  type_51: false   # 状态通知消息
+  type_62: false   # 小视频消息
+  type_10000: true # 系统消息
+
+# 牌堆配置
+decks:
+  dmt: "万象无常.json"  # 示例：dmt对应万象无常+法术浪涌.json
+  wm: "狂野法术浪涌.json"
+  # 可以添加更多牌堆配置
