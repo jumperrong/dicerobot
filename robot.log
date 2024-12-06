@@ -53011,3 +53011,92 @@ d200[ 102 ] = 102
 2024-12-06 07:32:00,894 [DEBUG] [nng.py:1336] Pipe callback event 2
 2024-12-06 07:32:01,896 [DEBUG] [robot.py:425] 已理 WCF 资源
 2024-12-06 07:32:01,896 [INFO] [robot.py:426] 骰子机器人已停止
+2024-12-06 09:33:54,509 [DEBUG] [robot.py:242] 尝试加载配置文件: C:\Users\jumpe\Desktop\dicerobot\config.yaml
+2024-12-06 09:33:54,511 [DEBUG] [robot.py:246] 成功加载置件: {'bot': {'name': '骰子机器人', 'version': '1.0.0'}, 'files': {'dnd_data': 'DND5E23_4_2.json', 'log_file': 'robot.log', 'deck_path': 'decks'}, 'logging': {'level': 'DEBUG', 'format': '%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s'}, 'message_display': {'type_1': True, 'type_3': False, 'type_34': False, 'type_43': False, 'type_42': False, 'type_48': False, 'type_47': False, 'type_49': False, 'type_37': False, 'type_40': False, 'type_41': False, 'type_44': False, 'type_50': False, 'type_51': False, 'type_62': False, 'type_10000': True}, 'decks': {'dmt': '万象无常.json', 'wm': '狂野法术浪涌.json', 'injury': '伤残.json'}}
+2024-12-06 09:33:54,512 [INFO] [client.py:73] wcferry version: 39.3.3.2
+2024-12-06 09:33:56,535 [DEBUG] [nng.py:1336] Pipe callback event 0
+2024-12-06 09:33:56,536 [DEBUG] [nng.py:1336] Pipe callback event 1
+2024-12-06 09:33:56,536 [INFO] [client.py:110] 等待微信登录...
+2024-12-06 09:33:56,536 [INFO] [robot.py:608] 正在启动骰子机器人...
+2024-12-06 09:33:56,536 [DEBUG] [robot.py:611] 初始化 WCF 对象完成
+2024-12-06 09:33:56,536 [DEBUG] [robot.py:257] 尝试加载D&D数据文件: C:\Users\jumpe\Desktop\dicerobot\DND5E23_4_2.json
+2024-12-06 09:33:56,538 [DEBUG] [robot.py:260] 文件存在，开始读取
+2024-12-06 09:33:56,555 [DEBUG] [robot.py:263] 成功加载数据，词条数: 6
+2024-12-06 09:33:56,556 [DEBUG] [robot.py:616] 加载D&D数据完成，数据量: 6
+2024-12-06 09:33:56,556 [INFO] [robot.py:621] 正在启用消息接收功能...
+2024-12-06 09:33:56,612 [INFO] [robot.py:636] 骰子机器人已启动，开始接收消息
+2024-12-06 09:33:56,612 [INFO] [robot.py:637] 支持的命令: .r (骰子指令), .help (帮助信息), .sys (机器人状态), .jrrp (今日人品), .dnd (D&D查询)
+2024-12-06 09:33:56,612 [DEBUG] [robot.py:638] 进入主循环
+2024-12-06 09:33:56,613 [DEBUG] [nng.py:1336] Pipe callback event 0
+2024-12-06 09:33:56,613 [DEBUG] [nng.py:1336] Pipe callback event 1
+2024-12-06 09:34:03,142 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:03,143 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=dazzlerain, room_id=51954511498@chatroom
+2024-12-06 09:34:03,145 [DEBUG] [robot.py:568] [群聊] [文本消息] 吗喽: 我不买了
+2024-12-06 09:34:09,209 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:09,209 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=dazzlerain, room_id=51954511498@chatroom
+2024-12-06 09:34:09,210 [DEBUG] [robot.py:568] [群聊] [文本消息] 吗喽: 245穿进icc
+2024-12-06 09:34:12,825 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:12,825 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_lyr6ut34nobj22, room_id=51954511498@chatroom
+2024-12-06 09:34:12,827 [DEBUG] [robot.py:568] [群聊] [文本消息] 戒过赌的天蓝色职业: 法师要4T9
+2024-12-06 09:34:16,466 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:21,335 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:21,335 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_lyr6ut34nobj22, room_id=51954511498@chatroom
+2024-12-06 09:34:21,336 [DEBUG] [robot.py:568] [群聊] [文本消息] 戒过赌的天蓝色职业: 不过后面258
+2024-12-06 09:34:25,776 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:25,776 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_lyr6ut34nobj22, room_id=51954511498@chatroom
+2024-12-06 09:34:25,778 [DEBUG] [robot.py:568] [群聊] [文本消息] 戒过赌的天蓝色职业: 会烂
+2024-12-06 09:34:27,813 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:27,813 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=dazzlerain, room_id=51954511498@chatroom
+2024-12-06 09:34:27,816 [DEBUG] [robot.py:568] [群聊] [文本消息] 吗喽: 4件245就行了
+2024-12-06 09:34:28,199 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:28,199 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_lyr6ut34nobj22, room_id=51954511498@chatroom
+2024-12-06 09:34:28,201 [DEBUG] [robot.py:568] [群聊] [文本消息] 戒过赌的天蓝色职业: 毕竟必出
+2024-12-06 09:34:33,462 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:33,462 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_kyq6f7mnaoho11, room_id=51954511498@chatroom
+2024-12-06 09:34:33,465 [DEBUG] [robot.py:568] [群聊] [文本消息] 骑八戒FQ: 你不买，他不买，那就让我买
+2024-12-06 09:34:34,462 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:34,462 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_lyr6ut34nobj22, room_id=51954511498@chatroom
+2024-12-06 09:34:34,464 [DEBUG] [robot.py:568] [群聊] [文本消息] 戒过赌的天蓝色职业: 全员258进ICC
+2024-12-06 09:34:35,276 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:35,276 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_9yz4nnw0sp8y22, room_id=52275509390@chatroom
+2024-12-06 09:34:35,278 [DEBUG] [robot.py:568] [群聊] [文本消息] 砂金: .drawhelp
+2024-12-06 09:34:35,278 [DEBUG] [robot.py:573] 识别为抽卡帮助命令
+2024-12-06 09:34:35,279 [DEBUG] [robot.py:108] 尝试加载牌堆文件: C:\Users\jumpe\Desktop\dicerobot\decks\万象无常.json
+2024-12-06 09:34:35,279 [DEBUG] [robot.py:118] 成功加载牌堆 dmt, 包含 22 张卡牌
+2024-12-06 09:34:35,279 [DEBUG] [robot.py:108] 尝试加载牌堆文件: C:\Users\jumpe\Desktop\dicerobot\decks\狂野法术浪涌.json
+2024-12-06 09:34:35,280 [DEBUG] [robot.py:118] 成功加载牌堆 wm, 包含 50 张卡牌
+2024-12-06 09:34:35,280 [DEBUG] [robot.py:108] 尝试加载牌堆文件: C:\Users\jumpe\Desktop\dicerobot\decks\伤残.json
+2024-12-06 09:34:35,280 [DEBUG] [robot.py:118] 成功加载牌堆 injury, 包含 30 张卡牌
+2024-12-06 09:34:35,280 [DEBUG] [robot.py:536] 生成.drawhelp信���: 可用牌堆列表：
+dmt (22张) - 文件: 万象无常.json
+wm (50张) - 文件: 狂野法术浪涌.json
+injury (30张) - 文件: 伤残.json
+
+使用示例：
+.draw 牌堆名 数量
+例如：.draw dmt 1
+2024-12-06 09:34:52,643 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:52,643 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_9yz4nnw0sp8y22, room_id=52275509390@chatroom
+2024-12-06 09:34:52,644 [DEBUG] [robot.py:568] [群聊] [文本消息] 砂金: .draw injury
+2024-12-06 09:34:52,645 [DEBUG] [robot.py:594] 识别为抽卡命令
+2024-12-06 09:34:52,645 [DEBUG] [robot.py:181] 抽取牌堆: injury, 请求数量: 1
+2024-12-06 09:34:52,645 [DEBUG] [robot.py:94] 从缓存加载牌堆: injury
+2024-12-06 09:34:52,645 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_9yz4nnw0sp8y22, room_id=52275509390@chatroom
+2024-12-06 09:34:52,646 [DEBUG] [robot.py:206] 抽卡结果: 【砂金】从牌堆中抽取了 1 张卡牌：
+- 21-23: 某块肺腑被震碎，你的气血值永久-15。
+(牌堆共30张)
+2024-12-06 09:34:57,288 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:57,289 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_lyr6ut34nobj22, room_id=51954511498@chatroom
+2024-12-06 09:34:57,290 [DEBUG] [robot.py:568] [群聊] [文本消息] 戒过赌的天蓝色职业: 前面贵
+2024-12-06 09:35:06,952 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:35:06,952 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=fanx325219, room_id=20983224463@chatroom
+2024-12-06 09:35:06,954 [DEBUG] [robot.py:568] [群聊] [文本消息] 嘿我是大雪: 今天上新么
+2024-12-06 09:35:11,233 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:35:11,233 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_lyr6ut34nobj22, room_id=51954511498@chatroom
+2024-12-06 09:35:11,236 [DEBUG] [robot.py:568] [群聊] [文本消息] 戒过赌的天蓝色职业: 4件套刚需就是邪迪凯
+2024-12-06 09:35:18,340 [INFO] [robot.py:663] 收到停止信号，正在停止骰子机器人...
+2024-12-06 09:35:18,340 [DEBUG] [robot.py:667] 开始清理资源
+2024-12-06 09:35:18,399 [DEBUG] [nng.py:1336] Pipe callback event 2
+2024-12-06 09:35:18,402 [DEBUG] [nng.py:1336] Pipe callback event 2
+2024-12-06 09:35:19,403 [DEBUG] [robot.py:669] 已清理 WCF 资源
+2024-12-06 09:35:19,403 [INFO] [robot.py:670] 骰子机器人已停止
