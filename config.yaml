@@ -38,4 +38,6 @@ message_display:
 decks:
   dmt: "万象无常.json"  # 示例：dmt对应万象无常+法术浪涌.json
   wm: "狂野法术浪涌.json"
+  injury: "侠界伤残.json"
+
   # 可以添加更多牌堆配置

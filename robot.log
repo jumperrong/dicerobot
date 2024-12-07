@@ -53011,3 +53011,756 @@ d200[ 102 ] = 102
 2024-12-06 07:32:00,894 [DEBUG] [nng.py:1336] Pipe callback event 2
 2024-12-06 07:32:01,896 [DEBUG] [robot.py:425] 已理 WCF 资源
 2024-12-06 07:32:01,896 [INFO] [robot.py:426] 骰子机器人已停止
+2024-12-06 09:33:54,509 [DEBUG] [robot.py:242] 尝试加载配置文件: C:\Users\jumpe\Desktop\dicerobot\config.yaml
+2024-12-06 09:33:54,511 [DEBUG] [robot.py:246] 成功加载置件: {'bot': {'name': '骰子机器人', 'version': '1.0.0'}, 'files': {'dnd_data': 'DND5E23_4_2.json', 'log_file': 'robot.log', 'deck_path': 'decks'}, 'logging': {'level': 'DEBUG', 'format': '%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s'}, 'message_display': {'type_1': True, 'type_3': False, 'type_34': False, 'type_43': False, 'type_42': False, 'type_48': False, 'type_47': False, 'type_49': False, 'type_37': False, 'type_40': False, 'type_41': False, 'type_44': False, 'type_50': False, 'type_51': False, 'type_62': False, 'type_10000': True}, 'decks': {'dmt': '万象无常.json', 'wm': '狂野法术浪涌.json', 'injury': '伤残.json'}}
+2024-12-06 09:33:54,512 [INFO] [client.py:73] wcferry version: 39.3.3.2
+2024-12-06 09:33:56,535 [DEBUG] [nng.py:1336] Pipe callback event 0
+2024-12-06 09:33:56,536 [DEBUG] [nng.py:1336] Pipe callback event 1
+2024-12-06 09:33:56,536 [INFO] [client.py:110] 等待微信登录...
+2024-12-06 09:33:56,536 [INFO] [robot.py:608] 正在启动骰子机器人...
+2024-12-06 09:33:56,536 [DEBUG] [robot.py:611] 初始化 WCF 对象完成
+2024-12-06 09:33:56,536 [DEBUG] [robot.py:257] 尝试加载D&D数据文件: C:\Users\jumpe\Desktop\dicerobot\DND5E23_4_2.json
+2024-12-06 09:33:56,538 [DEBUG] [robot.py:260] 文件存在，开始读取
+2024-12-06 09:33:56,555 [DEBUG] [robot.py:263] 成功加载数据，词条数: 6
+2024-12-06 09:33:56,556 [DEBUG] [robot.py:616] 加载D&D数据完成，数据量: 6
+2024-12-06 09:33:56,556 [INFO] [robot.py:621] 正在启用消息接收功能...
+2024-12-06 09:33:56,612 [INFO] [robot.py:636] 骰子机器人已启动，开始接收消息
+2024-12-06 09:33:56,612 [INFO] [robot.py:637] 支持的命令: .r (骰子指令), .help (帮助信息), .sys (机器人状态), .jrrp (今日人品), .dnd (D&D查询)
+2024-12-06 09:33:56,612 [DEBUG] [robot.py:638] 进入主循环
+2024-12-06 09:33:56,613 [DEBUG] [nng.py:1336] Pipe callback event 0
+2024-12-06 09:33:56,613 [DEBUG] [nng.py:1336] Pipe callback event 1
+2024-12-06 09:34:03,142 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:03,143 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=dazzlerain, room_id=51954511498@chatroom
+2024-12-06 09:34:03,145 [DEBUG] [robot.py:568] [群聊] [文本消息] 吗喽: 我不买了
+2024-12-06 09:34:09,209 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:09,209 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=dazzlerain, room_id=51954511498@chatroom
+2024-12-06 09:34:09,210 [DEBUG] [robot.py:568] [群聊] [文本消息] 吗喽: 245穿进icc
+2024-12-06 09:34:12,825 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:12,825 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_lyr6ut34nobj22, room_id=51954511498@chatroom
+2024-12-06 09:34:12,827 [DEBUG] [robot.py:568] [群聊] [文本消息] 戒过赌的天蓝色职业: 法师要4T9
+2024-12-06 09:34:16,466 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:21,335 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:21,335 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_lyr6ut34nobj22, room_id=51954511498@chatroom
+2024-12-06 09:34:21,336 [DEBUG] [robot.py:568] [群聊] [文本消息] 戒过赌的天蓝色职业: 不过后面258
+2024-12-06 09:34:25,776 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:25,776 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_lyr6ut34nobj22, room_id=51954511498@chatroom
+2024-12-06 09:34:25,778 [DEBUG] [robot.py:568] [群聊] [文本消息] 戒过赌的天蓝色职业: 会烂
+2024-12-06 09:34:27,813 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:27,813 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=dazzlerain, room_id=51954511498@chatroom
+2024-12-06 09:34:27,816 [DEBUG] [robot.py:568] [群聊] [文本消息] 吗喽: 4件245就行了
+2024-12-06 09:34:28,199 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:28,199 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_lyr6ut34nobj22, room_id=51954511498@chatroom
+2024-12-06 09:34:28,201 [DEBUG] [robot.py:568] [群聊] [文本消息] 戒过赌的天蓝色职业: 毕竟必出
+2024-12-06 09:34:33,462 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:33,462 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_kyq6f7mnaoho11, room_id=51954511498@chatroom
+2024-12-06 09:34:33,465 [DEBUG] [robot.py:568] [群聊] [文本消息] 骑八戒FQ: 你不买，他不买，那就让我买
+2024-12-06 09:34:34,462 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:34,462 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_lyr6ut34nobj22, room_id=51954511498@chatroom
+2024-12-06 09:34:34,464 [DEBUG] [robot.py:568] [群聊] [文本消息] 戒过赌的天蓝色职业: 全员258进ICC
+2024-12-06 09:34:35,276 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:35,276 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_9yz4nnw0sp8y22, room_id=52275509390@chatroom
+2024-12-06 09:34:35,278 [DEBUG] [robot.py:568] [群聊] [文本消息] 砂金: .drawhelp
+2024-12-06 09:34:35,278 [DEBUG] [robot.py:573] 识别为抽卡帮助命令
+2024-12-06 09:34:35,279 [DEBUG] [robot.py:108] 尝试加载牌堆文件: C:\Users\jumpe\Desktop\dicerobot\decks\万象无常.json
+2024-12-06 09:34:35,279 [DEBUG] [robot.py:118] 成功加载牌堆 dmt, 包含 22 张卡牌
+2024-12-06 09:34:35,279 [DEBUG] [robot.py:108] 尝试加载牌堆文件: C:\Users\jumpe\Desktop\dicerobot\decks\狂野法术浪涌.json
+2024-12-06 09:34:35,280 [DEBUG] [robot.py:118] 成功加载牌堆 wm, 包含 50 张卡牌
+2024-12-06 09:34:35,280 [DEBUG] [robot.py:108] 尝试加载牌堆文件: C:\Users\jumpe\Desktop\dicerobot\decks\伤残.json
+2024-12-06 09:34:35,280 [DEBUG] [robot.py:118] 成功加载牌堆 injury, 包含 30 张卡牌
+2024-12-06 09:34:35,280 [DEBUG] [robot.py:536] 生成.drawhelp信���: 可用牌堆列表：
+dmt (22张) - 文件: 万象无常.json
+wm (50张) - 文件: 狂野法术浪涌.json
+injury (30张) - 文件: 伤残.json
+
+使用示例：
+.draw 牌堆名 数量
+例如：.draw dmt 1
+2024-12-06 09:34:52,643 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:52,643 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_9yz4nnw0sp8y22, room_id=52275509390@chatroom
+2024-12-06 09:34:52,644 [DEBUG] [robot.py:568] [群聊] [文本消息] 砂金: .draw injury
+2024-12-06 09:34:52,645 [DEBUG] [robot.py:594] 识别为抽卡命令
+2024-12-06 09:34:52,645 [DEBUG] [robot.py:181] 抽取牌堆: injury, 请求数量: 1
+2024-12-06 09:34:52,645 [DEBUG] [robot.py:94] 从缓存加载牌堆: injury
+2024-12-06 09:34:52,645 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_9yz4nnw0sp8y22, room_id=52275509390@chatroom
+2024-12-06 09:34:52,646 [DEBUG] [robot.py:206] 抽卡结果: 【砂金】从牌堆中抽取了 1 张卡牌：
+- 21-23: 某块肺腑被震碎，你的气血值永久-15。
+(牌堆共30张)
+2024-12-06 09:34:57,288 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:34:57,289 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_lyr6ut34nobj22, room_id=51954511498@chatroom
+2024-12-06 09:34:57,290 [DEBUG] [robot.py:568] [群聊] [文本消息] 戒过赌的天蓝色职业: 前面贵
+2024-12-06 09:35:06,952 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:35:06,952 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=fanx325219, room_id=20983224463@chatroom
+2024-12-06 09:35:06,954 [DEBUG] [robot.py:568] [群聊] [文本消息] 嘿我是大雪: 今天上新么
+2024-12-06 09:35:11,233 [DEBUG] [robot.py:646] 收到新消息，开始处理
+2024-12-06 09:35:11,233 [DEBUG] [robot.py:302] 开始获取用户信息: wxid=wxid_lyr6ut34nobj22, room_id=51954511498@chatroom
+2024-12-06 09:35:11,236 [DEBUG] [robot.py:568] [群聊] [文本消息] 戒过赌的天蓝色职业: 4件套刚需就是邪迪凯
+2024-12-06 09:35:18,340 [INFO] [robot.py:663] 收到停止信号，正在停止骰子机器人...
+2024-12-06 09:35:18,340 [DEBUG] [robot.py:667] 开始清理资源
+2024-12-06 09:35:18,399 [DEBUG] [nng.py:1336] Pipe callback event 2
+2024-12-06 09:35:18,402 [DEBUG] [nng.py:1336] Pipe callback event 2
+2024-12-06 09:35:19,403 [DEBUG] [robot.py:669] 已清理 WCF 资源
+2024-12-06 09:35:19,403 [INFO] [robot.py:670] 骰子机器人已停止
+2024-12-07 09:35:13,783 [INFO] [client.py:73] wcferry version: 39.3.3.2
+2024-12-07 09:35:15,823 [DEBUG] [nng.py:1336] Pipe callback event 0
+2024-12-07 09:35:15,823 [DEBUG] [nng.py:1336] Pipe callback event 1
+2024-12-07 09:35:15,823 [INFO] [client.py:110] 等待微信登录...
+2024-12-07 09:35:25,834 [INFO] [main.py:59] 正在启动骰子机器人...
+2024-12-07 09:35:25,912 [INFO] [main.py:83] 骰子机器人已启动，开始接收消息
+2024-12-07 09:35:25,913 [DEBUG] [nng.py:1336] Pipe callback event 0
+2024-12-07 09:35:25,914 [DEBUG] [nng.py:1336] Pipe callback event 1
+2024-12-07 09:35:33,688 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_46811f98r6m222, room_id=56598080240@chatroom
+2024-12-07 09:35:33,689 [DEBUG] [robot.py:180] [群聊] [文本消息] 🥁 掌控家: 20元架子鼓鼓手陈益山，精心打磨的《流行音乐演奏思路》课程
+2024-12-07 09:35:33,791 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=mnizxy, room_id=52023917674@chatroom
+2024-12-07 09:35:33,794 [DEBUG] [robot.py:180] [群聊] [文本消息] 丶Shine: 道理也是道理，但不会肯的哇
+2024-12-07 09:35:33,995 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=sd9647541, room_id=51954511498@chatroom
+2024-12-07 09:35:33,997 [DEBUG] [robot.py:180] [群聊] [文本消息] 貂蝉-西司-亡昭君: @戒过赌的天蓝色职业 这就是你要的信浓？
+2024-12-07 09:35:34,098 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_lyr6ut34nobj22, room_id=51954511498@chatroom
+2024-12-07 09:35:34,100 [DEBUG] [robot.py:180] [群聊] [文本消息] 戒过赌的天蓝色职业: 没想过
+2024-12-07 09:35:34,502 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=kinn_kinn, room_id=20772900986@chatroom
+2024-12-07 09:35:34,506 [DEBUG] [robot.py:180] [群聊] [文本消息] A.D: 在喊总统下台[旺柴]
+2024-12-07 09:35:34,607 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_twz9ca21k61622, room_id=51954511498@chatroom
+2024-12-07 09:35:34,609 [DEBUG] [robot.py:180] [群聊] [文本消息] 溺水三千，煙雨霓裳，瓜皮: 战舰世界 
+2024-12-07 09:35:34,710 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_twz9ca21k61622, room_id=51954511498@chatroom
+2024-12-07 09:35:34,712 [DEBUG] [robot.py:180] [群聊] [文本消息] 溺水三千，煙雨霓裳，瓜皮: 这游戏最省钱的法子就是
+2024-12-07 09:35:34,813 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_twz9ca21k61622, room_id=51954511498@chatroom
+2024-12-07 09:35:34,814 [DEBUG] [robot.py:180] [群聊] [文本消息] 溺水三千，煙雨霓裳，瓜皮: 进游戏买艘8级舰，然后去赚钱
+2024-12-07 09:35:34,915 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_twz9ca21k61622, room_id=51954511498@chatroom
+2024-12-07 09:35:34,917 [DEBUG] [robot.py:180] [群聊] [文本消息] 溺水三千，煙雨霓裳，瓜皮: 特别是新手期
+2024-12-07 09:35:35,018 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_twz9ca21k61622, room_id=51954511498@chatroom
+2024-12-07 09:35:35,019 [DEBUG] [robot.py:180] [群聊] [文本消息] 溺水三千，煙雨霓裳，瓜皮: 新手基本就是给人当移动靶的 
+2024-12-07 09:35:35,120 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_twz9ca21k61622, room_id=51954511498@chatroom
+2024-12-07 09:35:35,121 [DEBUG] [robot.py:180] [群聊] [文本消息] 溺水三千，煙雨霓裳，瓜皮: 这游戏恶心就恶心在，如果被人全垒打，你就是被人一炮送走的命 
+2024-12-07 09:35:35,222 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=20772900986@chatroom
+2024-12-07 09:35:35,224 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 这俩天首尔之春翻红了
+2024-12-07 09:35:35,325 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xglqmc, room_id=52023917674@chatroom
+2024-12-07 09:35:35,327 [DEBUG] [robot.py:180] [群聊] [文本消息] 许: 我自己卸了电池车子能不能卖
+2024-12-07 09:35:35,428 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_gtslty2fffs111, room_id=52023917674@chatroom
+2024-12-07 09:35:35,429 [DEBUG] [robot.py:180] [群聊] [文本消息] No.11  Martian: 买的人如何开呢
+2024-12-07 09:35:35,530 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_5huwy8a77vnk12, room_id=51954511498@chatroom
+2024-12-07 09:35:35,531 [DEBUG] [robot.py:180] [群聊] [文本消息] KBZ-戰旗、防骑-奏乐、NS-柠萌茶: @戒过赌的天蓝色职业 今天的报名表呢？
+2024-12-07 09:35:35,632 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xglqmc, room_id=52023917674@chatroom
+2024-12-07 09:35:35,633 [DEBUG] [robot.py:180] [群聊] [文本消息] 许: 去租电池啊
+2024-12-07 09:35:35,734 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_gtslty2fffs111, room_id=52023917674@chatroom
+2024-12-07 09:35:35,734 [DEBUG] [robot.py:180] [群聊] [文本消息] No.11  Martian: 开发新思路了
+2024-12-07 09:35:35,836 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xglqmc, room_id=52023917674@chatroom
+2024-12-07 09:35:35,837 [DEBUG] [robot.py:180] [群聊] [文本消息] 许: 既然你换电，你就不能算电池折旧
+2024-12-07 09:35:35,938 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xglqmc, room_id=52023917674@chatroom
+2024-12-07 09:35:35,938 [DEBUG] [robot.py:180] [群聊] [文本消息] 许: 如果你是其他电动车不带换电池，那有折旧我认可
+2024-12-07 09:35:36,040 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=25984984135350437@openim, room_id=43250723684@chatroom
+2024-12-07 09:35:36,094 [DEBUG] [functions.py:32] 使用微信昵称: 我是山姆机器人（不回复哦）209
+2024-12-07 09:35:36,094 [DEBUG] [robot.py:180] [群聊] [文本消息] 我是山姆机器人（不回复哦）209: #商品推荐
+🔔周五好价宝藏来咯！
+💐丰富你的生活~帮你省更多~
+▬▬▬⇩⇩▬▬▬⇩⇩▬▬▬、
+🥓澳洲谷饲上脑薄切
+➠立省¥9/斤💰限时仅售¥54.9/斤
+
+🍖调味法式羊排
+➠立省¥15💰仅售¥154.9/1.2kg
+
+📺添添闺蜜机
+➠立省¥500💰仅售¥3499
+
+🛒点击小程序~遇见冬日好价好物~
+2024-12-07 09:35:36,295 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_9974049740611, room_id=20772900986@chatroom
+2024-12-07 09:35:36,296 [DEBUG] [robot.py:180] [群聊] [文本消息] 波里个浪: 群主是战地记者
+2024-12-07 09:35:36,397 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_58c6x5fndubz11, room_id=51954511498@chatroom
+2024-12-07 09:35:36,397 [DEBUG] [robot.py:180] [群聊] [文本消息] 克里斯（奶骑）: 今天咕咕咕了
+2024-12-07 09:35:36,498 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_lyr6ut34nobj22, room_id=51954511498@chatroom
+2024-12-07 09:35:36,499 [DEBUG] [robot.py:180] [群聊] [文本消息] 戒过赌的天蓝色职业: @KBZ-戰旗、防骑-奏乐、NS-柠萌茶 今天第一车大概率咕咕咕
+2024-12-07 09:35:36,600 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_lyr6ut34nobj22, room_id=51954511498@chatroom
+2024-12-07 09:35:36,600 [DEBUG] [robot.py:180] [群聊] [文本消息] 戒过赌的天蓝色职业: 要喝酒
+2024-12-07 09:35:36,702 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=yuyinweile047312, room_id=52023917674@chatroom
+2024-12-07 09:35:36,703 [DEBUG] [robot.py:180] [群聊] [文本消息] 钟凯: 整车买断必然会带来整车折旧，如果想避免，下辆车电池租用
+2024-12-07 09:35:36,804 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xglqmc, room_id=52023917674@chatroom
+2024-12-07 09:35:36,805 [DEBUG] [robot.py:180] [群聊] [文本消息] 许: 如果我再买一辆租，我还没有权利选择哪个车子租电池，哪个车子买断的电池，如果可以变，那我可以老车租电池去卖
+2024-12-07 09:35:36,906 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=xiliniuniu
+2024-12-07 09:35:36,953 [DEBUG] [functions.py:32] 使用微信昵称: xx的龙王
+2024-12-07 09:35:36,953 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 渡边笃郎 你看看像谁
+2024-12-07 09:35:37,053 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=yuyinweile047312, room_id=52023917674@chatroom
+2024-12-07 09:35:37,054 [DEBUG] [robot.py:180] [群聊] [文本消息] 钟凯: 这个权利是你买的时候选择而不是卖的时候
+2024-12-07 09:35:37,155 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=pigbrother9577, room_id=52023917674@chatroom
+2024-12-07 09:35:37,156 [DEBUG] [robot.py:180] [群聊] [文本消息] 彦铭.: 真是个小机灵鬼
+2024-12-07 09:35:37,257 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiliniuniu, room_id=xiliniuniu
+2024-12-07 09:35:37,311 [DEBUG] [functions.py:32] 使用微信昵称: Lita
+2024-12-07 09:35:37,311 [DEBUG] [robot.py:180] [群聊] [文本消息] Lita: 渡边笃郎是谁
+2024-12-07 09:35:37,412 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=ls_lance_lucifer, room_id=52023917674@chatroom
+2024-12-07 09:35:37,413 [DEBUG] [robot.py:180] [群聊] [文本消息] 爱吃的小柒: @许家公子 对，粉色是改色，我们有个朋友也是粉色
+2024-12-07 09:35:37,514 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=xiliniuniu
+2024-12-07 09:35:37,562 [DEBUG] [functions.py:32] 使用微信昵称: xx的龙王
+2024-12-07 09:35:37,562 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 搜下咯
+2024-12-07 09:35:37,662 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=mnizxy, room_id=52023917674@chatroom
+2024-12-07 09:35:37,664 [DEBUG] [robot.py:180] [群聊] [文本消息] 丶Shine: 买断就应该属于跟车一起绑定，不能按换电的思路去理解
+2024-12-07 09:35:37,866 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiliniuniu, room_id=xiliniuniu
+2024-12-07 09:35:37,915 [DEBUG] [functions.py:32] 使用微信昵称: Lita
+2024-12-07 09:35:37,916 [DEBUG] [robot.py:180] [群聊] [文本消息] Lita: 哪个
+2024-12-07 09:35:38,017 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiliniuniu, room_id=xiliniuniu
+2024-12-07 09:35:38,063 [DEBUG] [functions.py:32] 使用微信昵称: Lita
+2024-12-07 09:35:38,063 [DEBUG] [robot.py:180] [群聊] [系统消息] Lita: [系统消息]
+2024-12-07 09:35:38,164 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiliniuniu, room_id=xiliniuniu
+2024-12-07 09:35:38,211 [DEBUG] [functions.py:32] 使用微信昵称: Lita
+2024-12-07 09:35:38,211 [DEBUG] [robot.py:180] [群聊] [文本消息] Lita: 这个是年轻时候？
+2024-12-07 09:35:38,513 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xuyuan870922, room_id=52023917674@chatroom
+2024-12-07 09:35:38,514 [DEBUG] [robot.py:180] [群聊] [文本消息] xuyue: @Chris-正. [机智]
+2024-12-07 09:35:38,615 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=xiliniuniu
+2024-12-07 09:35:38,670 [DEBUG] [functions.py:32] 使用微信昵称: xx的龙王
+2024-12-07 09:35:38,670 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 你看看年轻剧照，跟你老公像不？
+2024-12-07 09:35:38,770 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiliniuniu, room_id=xiliniuniu
+2024-12-07 09:35:38,832 [DEBUG] [functions.py:32] 使用微信昵称: Lita
+2024-12-07 09:35:38,832 [DEBUG] [robot.py:180] [群聊] [文本消息] Lita: 不像啊
+2024-12-07 09:35:39,134 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=xiliniuniu
+2024-12-07 09:35:39,184 [DEBUG] [functions.py:32] 使用微信昵称: xx的龙王
+2024-12-07 09:35:39,184 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 你去多看几张撒
+2024-12-07 09:35:39,386 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiliniuniu, room_id=xiliniuniu
+2024-12-07 09:35:39,433 [DEBUG] [functions.py:32] 使用微信昵称: Lita
+2024-12-07 09:35:39,433 [DEBUG] [robot.py:180] [群聊] [文本消息] Lita: 这个年轻吗
+2024-12-07 09:35:39,534 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiliniuniu, room_id=xiliniuniu
+2024-12-07 09:35:39,584 [DEBUG] [functions.py:32] 使用微信昵称: Lita
+2024-12-07 09:35:39,584 [DEBUG] [robot.py:180] [群聊] [文本消息] Lita: 为啥是最帅岳父？
+2024-12-07 09:35:39,685 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiliniuniu, room_id=xiliniuniu
+2024-12-07 09:35:39,736 [DEBUG] [functions.py:32] 使用微信昵称: Lita
+2024-12-07 09:35:39,736 [DEBUG] [robot.py:180] [群聊] [文本消息] Lita: 他是谁岳父
+2024-12-07 09:35:39,837 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=xiliniuniu
+2024-12-07 09:35:39,885 [DEBUG] [functions.py:32] 使用微信昵称: xx的龙王
+2024-12-07 09:35:39,885 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 不知
+2024-12-07 09:35:39,987 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=xiliniuniu
+2024-12-07 09:35:40,033 [DEBUG] [functions.py:32] 使用微信昵称: xx的龙王
+2024-12-07 09:35:40,034 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 这张就很像啊
+2024-12-07 09:35:40,335 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiliniuniu, room_id=xiliniuniu
+2024-12-07 09:35:40,387 [DEBUG] [functions.py:32] 使用微信昵称: Lita
+2024-12-07 09:35:40,387 [DEBUG] [robot.py:180] [群聊] [文本消息] Lita: 啊不像啊
+2024-12-07 09:35:40,488 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=wxid_eylaooo7zo2o22
+2024-12-07 09:35:40,537 [DEBUG] [functions.py:32] 使用微信昵称: xx的龙王
+2024-12-07 09:35:40,537 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 还在等问卷回收
+2024-12-07 09:35:40,637 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=miulunhua, room_id=3539816007@chatroom
+2024-12-07 09:35:40,638 [DEBUG] [robot.py:180] [群聊] [文本消息] 华桦: @面筋 砍掉中国的数据，你会发现世界还是原来那个世界，列强还是那些列强。。。
+2024-12-07 09:35:40,839 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_twz9ca21k61622, room_id=51954511498@chatroom
+2024-12-07 09:35:40,841 [DEBUG] [robot.py:180] [群聊] [文本消息] 溺水三千，煙雨霓裳，瓜皮: [哇]
+2024-12-07 09:35:40,942 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_eylaooo7zo2o22, room_id=wxid_eylaooo7zo2o22
+2024-12-07 09:35:40,994 [DEBUG] [functions.py:32] 使用微信昵称: 星回
+2024-12-07 09:35:40,995 [DEBUG] [robot.py:180] [群聊] [文本消息] 星回: 那我先把小程序框架搭好
+2024-12-07 09:35:41,095 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=miulunhua, room_id=3539816007@chatroom
+2024-12-07 09:35:41,096 [DEBUG] [robot.py:180] [群聊] [文本消息] 华桦: 就是多了个异类。。
+2024-12-07 09:35:41,197 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=wxid_eylaooo7zo2o22
+2024-12-07 09:35:41,247 [DEBUG] [functions.py:32] 使用微信昵称: xx的龙王
+2024-12-07 09:35:41,248 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 嗯，数据库api啥的可以先想一下
+2024-12-07 09:35:41,348 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=xiliniuniu
+2024-12-07 09:35:41,398 [DEBUG] [functions.py:32] 使用微信昵称: xx的龙王
+2024-12-07 09:35:41,398 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 好吧
+2024-12-07 09:35:41,599 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_1731907318822, room_id=48816297423@chatroom
+2024-12-07 09:35:41,600 [DEBUG] [robot.py:180] [群聊] [文本消息] 恶念: 10H有没有
+2024-12-07 09:35:41,701 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=52760310696@chatroom
+2024-12-07 09:35:41,702 [DEBUG] [robot.py:180] [群聊] [文本消息] 东方义字仗助: 今晚有团不？
+2024-12-07 09:35:41,803 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52760310696@chatroom
+2024-12-07 09:35:41,805 [DEBUG] [robot.py:180] [群聊] [文本消息] 武林门盟主: 有啊
+2024-12-07 09:35:41,906 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52760310696@chatroom
+2024-12-07 09:35:41,906 [DEBUG] [robot.py:180] [群聊] [文本消息] 武林门盟主: 今晚不就是侠界吗
+2024-12-07 09:35:42,007 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:42,010 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: dd
+2024-12-07 09:35:42,110 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:42,111 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 这个团
+2024-12-07 09:35:42,313 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52760310696@chatroom
+2024-12-07 09:35:42,313 [DEBUG] [robot.py:180] [群聊] [文本消息] 武林门盟主: 还有来的吗？
+2024-12-07 09:35:42,414 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52760310696@chatroom
+2024-12-07 09:35:42,415 [DEBUG] [robot.py:180] [群聊] [文本消息] 武林门盟主: @所有人 
+2024-12-07 09:35:42,516 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=maomeizi001, room_id=52226030517@chatroom
+2024-12-07 09:35:42,517 [DEBUG] [robot.py:180] [群聊] [文本消息] Vanessa💗秀秀💕: 今天晚上我这边要接待个客户，可能来不了了[苦涩]
+2024-12-07 09:35:42,618 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:42,619 [DEBUG] [robot.py:180] [群聊] [系统消息] Vigny🍯: [系统消息]
+2024-12-07 09:35:42,721 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:42,722 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 没事，今晚不管几个人这个一年结算我都开了
+2024-12-07 09:35:42,822 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=maomeizi001, room_id=52226030517@chatroom
+2024-12-07 09:35:42,823 [DEBUG] [robot.py:180] [群聊] [文本消息] Vanessa💗秀秀💕: 嗯嗯
+2024-12-07 09:35:43,326 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:43,326 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 对了我拿扑克牌做实验，隔着几米往墙上打，70%的扑克出现了明显的折痕，我觉得很贵的暗器还是算一下回收率（除了暴雨梨花这样一次性的），就打出去的第三发可以回收吧，回收率三分之一，向下取整@Vanessa💗秀秀💕 
+2024-12-07 09:35:43,528 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=kinn_kinn, room_id=52226030517@chatroom
+2024-12-07 09:35:43,528 [DEBUG] [robot.py:180] [群聊] [文本消息] A.D: @Vigny🍯 应该是越贵的回收率越高才对
+2024-12-07 09:35:43,629 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=25984982313262081@openim, room_id=48008491466@chatroom
+2024-12-07 09:35:43,680 [DEBUG] [functions.py:32] 使用微信昵称: 心动iOS证书（14点上班）
+2024-12-07 09:35:43,681 [DEBUG] [robot.py:180] [群聊] [文本消息] 心动iOS证书（14点上班）: 🉑@Distance @Detail 
+2024-12-07 09:35:43,781 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=kinn_kinn, room_id=52226030517@chatroom
+2024-12-07 09:35:43,782 [DEBUG] [robot.py:180] [群聊] [文本消息] A.D: 不然贵的价值体现不出来，稀有的金属一定是增加耐久度的
+2024-12-07 09:35:43,883 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=kinn_kinn, room_id=52226030517@chatroom
+2024-12-07 09:35:43,887 [DEBUG] [robot.py:180] [群聊] [文本消息] A.D: 凡品无回收率，铜品百分之二十，银品三十，金品四十
+2024-12-07 09:35:43,988 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=52226030517@chatroom
+2024-12-07 09:35:43,988 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 命中的都得从对手身上拔下来
+2024-12-07 09:35:44,190 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_lb4p2m209uyg22, room_id=wxid_lb4p2m209uyg22
+2024-12-07 09:35:44,241 [DEBUG] [functions.py:32] 使用微信昵称: 蔡蔡电信
+2024-12-07 09:35:44,241 [DEBUG] [robot.py:180] [群聊] [文本消息] 蔡蔡电信: 荣总你好
+2024-12-07 09:35:44,342 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_lb4p2m209uyg22, room_id=wxid_lb4p2m209uyg22
+2024-12-07 09:35:44,389 [DEBUG] [functions.py:32] 使用微信昵称: 蔡蔡电信
+2024-12-07 09:35:44,389 [DEBUG] [robot.py:180] [群聊] [文本消息] 蔡蔡电信: 不好意思，上次的营业执照副本复印件没加盖公章
+2024-12-07 09:35:44,490 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_lb4p2m209uyg22, room_id=wxid_lb4p2m209uyg22
+2024-12-07 09:35:44,536 [DEBUG] [functions.py:32] 使用微信昵称: 蔡蔡电信
+2024-12-07 09:35:44,536 [DEBUG] [robot.py:180] [群聊] [文本消息] 蔡蔡电信: 这会能不能拍你们单位的原件
+2024-12-07 09:35:44,637 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_lb4p2m209uyg22, room_id=wxid_lb4p2m209uyg22
+2024-12-07 09:35:44,684 [DEBUG] [functions.py:32] 使用微信昵称: 蔡蔡电信
+2024-12-07 09:35:44,685 [DEBUG] [robot.py:180] [群聊] [文本消息] 蔡蔡电信: 这样我就可以通过审核了
+2024-12-07 09:35:44,785 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=wxid_lb4p2m209uyg22
+2024-12-07 09:35:44,834 [DEBUG] [functions.py:32] 使用微信昵称: xx的龙王
+2024-12-07 09:35:44,834 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 我找下哈
+2024-12-07 09:35:45,035 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:45,036 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 我看秀挺心疼的我就做了个实验
+2024-12-07 09:35:45,138 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=maomeizi001, room_id=52226030517@chatroom
+2024-12-07 09:35:45,139 [DEBUG] [robot.py:180] [群聊] [文本消息] Vanessa💗秀秀💕: 胡子心疼我
+2024-12-07 09:35:45,340 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=maomeizi001, room_id=52226030517@chatroom
+2024-12-07 09:35:45,341 [DEBUG] [robot.py:180] [群聊] [文本消息] Vanessa💗秀秀💕: 哈哈
+2024-12-07 09:35:45,442 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:45,442 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 普通价格为0的武器暗器免费且随手可取
+2024-12-07 09:35:45,543 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_lb4p2m209uyg22, room_id=wxid_lb4p2m209uyg22
+2024-12-07 09:35:45,600 [DEBUG] [functions.py:32] 使用微信昵称: 蔡蔡电信
+2024-12-07 09:35:45,600 [DEBUG] [robot.py:180] [群聊] [文本消息] 蔡蔡电信: 收到
+2024-12-07 09:35:45,701 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:45,703 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 我就想着贵的统一定个回收率，便宜的就按照使用了三个团一组好了，不然算起来也麻烦
+2024-12-07 09:35:45,904 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:45,906 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 就大于等于1000一组的回收率三分之一吧哈哈哈哈
+2024-12-07 09:35:46,007 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:46,009 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 这样方便些
+2024-12-07 09:35:46,111 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:46,112 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 50两一发暗器算贵了
+2024-12-07 09:35:46,213 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:46,215 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 那个金飞刀4000一组呢
+2024-12-07 09:35:46,316 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:46,319 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 上次退了秀两把
+2024-12-07 09:35:46,420 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:46,423 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 还有就是暗器不需要装备，随手可用
+2024-12-07 09:35:46,526 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:46,527 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 装备只是为了看暗器伤害
+2024-12-07 09:35:46,628 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=kinn_kinn, room_id=52226030517@chatroom
+2024-12-07 09:35:46,632 [DEBUG] [robot.py:180] [群聊] [文本消息] A.D: 是的，这个设计不太合理，不然暗器流靠什么养活自己
+2024-12-07 09:35:46,733 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=kinn_kinn, room_id=52226030517@chatroom
+2024-12-07 09:35:46,736 [DEBUG] [robot.py:180] [群聊] [文本消息] A.D: 打造也是要成本的
+2024-12-07 09:35:46,938 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=kinn_kinn, room_id=52226030517@chatroom
+2024-12-07 09:35:46,940 [DEBUG] [robot.py:180] [群聊] [文本消息] A.D: 一把刀飞出去两百两没了，也加不了多少伤害
+2024-12-07 09:35:47,041 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:47,043 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 对
+2024-12-07 09:35:47,145 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=kinn_kinn, room_id=52226030517@chatroom
+2024-12-07 09:35:47,148 [DEBUG] [robot.py:180] [群聊] [文本消息] A.D: 那我不如两百两雇几个弓箭手呢
+2024-12-07 09:35:47,249 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:47,250 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 之前dnd没怎么考虑这事情
+2024-12-07 09:35:47,351 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:47,352 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 因为dnd的箭好便而且懒得算负重
+2024-12-07 09:35:47,453 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:47,455 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 消耗品很贵的情况下我觉得得算
+2024-12-07 09:35:47,557 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=kinn_kinn, room_id=52226030517@chatroom
+2024-12-07 09:35:47,558 [DEBUG] [robot.py:180] [群聊] [文本消息] A.D: 因为dnd除了功能箭或者附魔箭比较贵以外，其他的挺便宜的
+2024-12-07 09:35:47,658 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=kinn_kinn, room_id=52226030517@chatroom
+2024-12-07 09:35:47,659 [DEBUG] [robot.py:180] [群聊] [文本消息] A.D: 而且功能箭的价格相对冒险收入来说也不离谱
+2024-12-07 09:35:47,861 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:47,861 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 嗯，侠界贵的暗器的特效我觉得是主要的，而不是伤害
+2024-12-07 09:35:47,963 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=kinn_kinn, room_id=52226030517@chatroom
+2024-12-07 09:35:47,964 [DEBUG] [robot.py:180] [群聊] [文本消息] A.D: 这个附加效果其实也很容易被克制
+2024-12-07 09:35:48,065 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=kinn_kinn, room_id=52226030517@chatroom
+2024-12-07 09:35:48,067 [DEBUG] [robot.py:180] [群聊] [文本消息] A.D: 很多门派武学直接移除效果
+2024-12-07 09:35:48,268 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:48,269 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 所以看起来高级暗器也没那么好
+2024-12-07 09:35:48,370 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:48,371 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 秀不用心疼
+2024-12-07 09:35:48,472 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=kinn_kinn, room_id=52226030517@chatroom
+2024-12-07 09:35:48,475 [DEBUG] [robot.py:180] [群聊] [文本消息] A.D: 是的，就感觉华而不实[捂脸]
+2024-12-07 09:35:48,677 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:48,681 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 我还记得龙王差点要来赤霄剑，然后后来武器被打断了
+2024-12-07 09:35:48,882 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_roa01lbimuhb22, room_id=47274167888@chatroom
+2024-12-07 09:35:48,883 [DEBUG] [robot.py:180] [群聊] [文本消息] 小苏打｜Yuppie雅痞: 下午有没有宝宝玩本呀2=N🈳❗️❗️
+2024-12-07 09:35:48,984 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_roa01lbimuhb22, room_id=47274167888@chatroom
+2024-12-07 09:35:48,985 [DEBUG] [robot.py:180] [群聊] [文本消息] 小苏打｜Yuppie雅痞: @所有人 
+2024-12-07 09:35:49,086 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=maomeizi001, room_id=52226030517@chatroom
+2024-12-07 09:35:49,089 [DEBUG] [robot.py:180] [群聊] [文本消息] Vanessa💗秀秀💕: 确实
+2024-12-07 09:35:49,189 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=maomeizi001, room_id=52226030517@chatroom
+2024-12-07 09:35:49,190 [DEBUG] [robot.py:180] [群聊] [文本消息] Vanessa💗秀秀💕: 哎
+2024-12-07 09:35:49,492 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_46811f98r6m222, room_id=56598080240@chatroom
+2024-12-07 09:35:49,497 [DEBUG] [robot.py:180] [群聊] [文本消息] 🥁 掌控家: 15💰
+《中国音乐学院架子鼓考级》
+科里天花板讲解[勾引][勾引][勾引]
+2024-12-07 09:35:49,598 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_xs2poxw56jfg22, room_id=47274167888@chatroom
+2024-12-07 09:35:49,602 [DEBUG] [robot.py:180] [群聊] [文本消息] 刺红: 什么本
+2024-12-07 09:35:49,703 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_a2fezxyoy62c22, room_id=47274167888@chatroom
+2024-12-07 09:35:49,706 [DEBUG] [robot.py:180] [群聊] [文本消息] Summer: 你想玩的本
+2024-12-07 09:35:49,908 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:49,911 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 关于暗器啥的其实我研究了不少，说法多种多样，比如投掷武器的种类还决定了其是否可回收（因为暗器多出现于小说，实战基本都是投掷类质量大的或者弓箭），比如希腊的投矛基本上就是消耗品，一个大目的是为打在敌人的盾牌上，然后敌人带着坠着头毛的盾牌打就会很不方便，丢掉盾牌又会降低防御力，接下来就是拼刀子环节。
+2024-12-07 09:35:50,012 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:50,016 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 维京的飞斧就是远距离丢一波或者几波，推进战线还可以捡起来继续丢或者近战，回收率很高
+2024-12-07 09:35:50,117 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiliniuniu, room_id=xiliniuniu
+2024-12-07 09:35:50,167 [DEBUG] [functions.py:32] 使用微信昵称: Lita
+2024-12-07 09:35:50,167 [DEBUG] [robot.py:180] [群聊] [文本消息] Lita: 你家后来空气净化器还留着没
+2024-12-07 09:35:50,268 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:50,269 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 大多数弓箭则是箭杆损毁率极高，箭头可回收，偶尔羽簇可回收。
+2024-12-07 09:35:50,370 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:50,372 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 不一样的箭还不一样，就复杂了
+2024-12-07 09:35:50,473 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=kinn_kinn, room_id=52226030517@chatroom
+2024-12-07 09:35:50,478 [DEBUG] [robot.py:180] [群聊] [文本消息] A.D: 我是从侠界的物价体系考虑，如果后期能够获得足够的资金，进行金品武器的打造，那倒是没啥问题
+2024-12-07 09:35:50,580 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=kinn_kinn, room_id=52226030517@chatroom
+2024-12-07 09:35:50,582 [DEBUG] [robot.py:180] [群聊] [文本消息] A.D: 不然暗器和其他兵器一个价格，确实有点离谱
+2024-12-07 09:35:50,683 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:50,686 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 其实我后来这么设定完全是词汇玩家心情考虑
+2024-12-07 09:35:50,888 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:50,889 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 怎么说呢，规则、合理性、玩家心情都是不一样的维度
+2024-12-07 09:35:50,989 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:50,993 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 规则为主，合理性为辅，玩家心情为导向
+2024-12-07 09:35:51,195 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:51,196 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 今天我打算丰富下你们的钱包，tc要是来我高低给个接腿机缘
+2024-12-07 09:35:51,297 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=kinn_kinn, room_id=52226030517@chatroom
+2024-12-07 09:35:51,301 [DEBUG] [robot.py:180] [群聊] [文本消息] A.D: 要是没有战斗，我可能只能线上，我家猫丢了
+2024-12-07 09:35:51,401 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=kinn_kinn, room_id=52226030517@chatroom
+2024-12-07 09:35:51,404 [DEBUG] [robot.py:180] [群聊] [文本消息] A.D: 要去找猫[捂脸]
+2024-12-07 09:35:51,505 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:51,508 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 尴尬
+2024-12-07 09:35:51,609 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:51,610 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 有没有战斗我也不确定
+2024-12-07 09:35:51,711 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:51,711 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 但是按月份还是挺紧凑的，建议线下。（不过我要是你我就去找猫）
+2024-12-07 09:35:51,812 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:51,816 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 反正之前说了今天几个人都开，你们量力而行…实在只有龙王子鹏能线下，甚至只有一个人，我也专心弄好
+2024-12-07 09:35:52,017 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:52,020 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 子鹏是不是今天也要很晚下班？
+2024-12-07 09:35:52,121 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:52,124 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: @子鹏 
+2024-12-07 09:35:52,225 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:52,228 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 如果是我就单独跟龙王研究软件和侠界的经营机制了
+2024-12-07 09:35:52,329 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=eashel, room_id=48816297423@chatroom
+2024-12-07 09:35:52,330 [DEBUG] [robot.py:180] [群聊] [文本消息] Mr.小北: 10h了
+2024-12-07 09:35:52,431 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_sjjc1043wu4h22, room_id=48816297423@chatroom
+2024-12-07 09:35:52,433 [DEBUG] [robot.py:180] [群聊] [文本消息] 次不次汤圆🍼: 来呀来呀
+2024-12-07 09:35:52,534 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=eashel, room_id=48816297423@chatroom
+2024-12-07 09:35:52,536 [DEBUG] [robot.py:180] [群聊] [文本消息] Mr.小北: @恶念 
+2024-12-07 09:35:52,637 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=eashel, room_id=48816297423@chatroom
+2024-12-07 09:35:52,640 [DEBUG] [robot.py:180] [群聊] [文本消息] Mr.小北: 搞起
+2024-12-07 09:35:52,741 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_1731907318822, room_id=48816297423@chatroom
+2024-12-07 09:35:52,744 [DEBUG] [robot.py:180] [群聊] [文本消息] 恶念: 来啊
+2024-12-07 09:35:52,845 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=eashel, room_id=48816297423@chatroom
+2024-12-07 09:35:52,850 [DEBUG] [robot.py:180] [群聊] [文本消息] Mr.小北: 你开啥
+2024-12-07 09:35:52,952 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_1731907318822, room_id=48816297423@chatroom
+2024-12-07 09:35:52,953 [DEBUG] [robot.py:180] [群聊] [文本消息] 恶念: DK
+2024-12-07 09:35:53,155 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_sjjc1043wu4h22, room_id=48816297423@chatroom
+2024-12-07 09:35:53,159 [DEBUG] [robot.py:180] [群聊] [文本消息] 次不次汤圆🍼: 我把奶骑的10人打了吧
+2024-12-07 09:35:53,261 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_sjjc1043wu4h22, room_id=48816297423@chatroom
+2024-12-07 09:35:53,264 [DEBUG] [robot.py:180] [群聊] [文本消息] 次不次汤圆🍼: 万一出个陨星
+2024-12-07 09:35:53,365 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_sjjc1043wu4h22, room_id=48816297423@chatroom
+2024-12-07 09:35:53,366 [DEBUG] [robot.py:180] [群聊] [文本消息] 次不次汤圆🍼: 晚上就舒服了
+2024-12-07 09:35:53,567 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_46811f98r6m222, room_id=56598080240@chatroom
+2024-12-07 09:35:53,568 [DEBUG] [robot.py:180] [群聊] [文本消息] 🥁 掌控家: [玫瑰][玫瑰][玫瑰][玫瑰]ROCKSCHOOL摇滚校园架子鼓教材2024至2030年版更新！每六年更新一次的教材天花板！不需要介绍！需要的直接入手！[玫瑰][玫瑰][玫瑰][玫瑰][玫瑰][玫瑰][玫瑰][玫瑰]需要的私信我
+2024-12-07 09:35:53,669 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=eashel, room_id=48816297423@chatroom
+2024-12-07 09:35:53,672 [DEBUG] [robot.py:180] [群聊] [文本消息] Mr.小北: 你们组人
+2024-12-07 09:35:53,773 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=eashel, room_id=48816297423@chatroom
+2024-12-07 09:35:53,777 [DEBUG] [robot.py:180] [群聊] [文本消息] Mr.小北: 我打猎人吧
+2024-12-07 09:35:53,878 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=eashel, room_id=48816297423@chatroom
+2024-12-07 09:35:53,882 [DEBUG] [robot.py:180] [群聊] [文本消息] Mr.小北: 等我五分钟
+2024-12-07 09:35:53,983 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=eashel, room_id=48816297423@chatroom
+2024-12-07 09:35:53,987 [DEBUG] [robot.py:180] [群聊] [文本消息] Mr.小北: @锅哒 打不打10人
+2024-12-07 09:35:54,188 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_3i6ufwsxjhgj22, room_id=52023917674@chatroom
+2024-12-07 09:35:54,194 [DEBUG] [robot.py:180] [群聊] [文本消息] NIO桂馨蕊: 家人们，龙🐉毯子断货了，现在不能发券了[捂脸]
+2024-12-07 09:35:54,396 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_3i6ufwsxjhgj22, room_id=52023917674@chatroom
+2024-12-07 09:35:54,400 [DEBUG] [robot.py:180] [群聊] [文本消息] NIO桂馨蕊: 卡包里有的，且用且珍惜
+2024-12-07 09:35:54,501 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_rtb6ydm5jgnl22, room_id=52023917674@chatroom
+2024-12-07 09:35:54,505 [DEBUG] [robot.py:180] [群聊] [文本消息] 晨爷鸭: 周六还领得到吗
+2024-12-07 09:35:54,607 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_3i6ufwsxjhgj22, room_id=52023917674@chatroom
+2024-12-07 09:35:54,611 [DEBUG] [robot.py:180] [群聊] [文本消息] NIO桂馨蕊: 试驾成功的都领得到
+2024-12-07 09:35:54,712 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_3i6ufwsxjhgj22, room_id=52023917674@chatroom
+2024-12-07 09:35:54,714 [DEBUG] [robot.py:180] [群聊] [文本消息] NIO桂馨蕊: 就是不会再发新的卡券了
+2024-12-07 09:35:54,815 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_gxfkuncyzau912, room_id=52023917674@chatroom
+2024-12-07 09:35:54,820 [DEBUG] [robot.py:180] [群聊] [文本消息] 失眠的冰美式: 什么！
+2024-12-07 09:35:54,921 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_gxfkuncyzau912, room_id=52023917674@chatroom
+2024-12-07 09:35:54,925 [DEBUG] [robot.py:180] [群聊] [文本消息] 失眠的冰美式: 我刚刚喊我朋友在试驾
+2024-12-07 09:35:55,127 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_3i6ufwsxjhgj22, room_id=52023917674@chatroom
+2024-12-07 09:35:55,131 [DEBUG] [robot.py:180] [群聊] [文本消息] NIO桂馨蕊: 哈哈哈哈 有券的还是能用的
+2024-12-07 09:35:55,533 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=sun_ning2010, room_id=52023917674@chatroom
+2024-12-07 09:35:55,536 [DEBUG] [robot.py:180] [群聊] [文本消息] 孙宁: 昨天才知道的，今天就断货了
+2024-12-07 09:35:55,738 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=mnizxy, room_id=52023917674@chatroom
+2024-12-07 09:35:55,739 [DEBUG] [robot.py:180] [群聊] [文本消息] 丶Shine: 肯定被隔壁特斯拉抢光了[阴险]
+2024-12-07 09:35:56,041 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_gxfkuncyzau912, room_id=52023917674@chatroom
+2024-12-07 09:35:56,046 [DEBUG] [robot.py:180] [群聊] [文本消息] 失眠的冰美式: 那现在带新朋友试驾
+2024-12-07 09:35:56,147 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_gxfkuncyzau912, room_id=52023917674@chatroom
+2024-12-07 09:35:56,151 [DEBUG] [robot.py:180] [群聊] [文本消息] 失眠的冰美式: 还有啥礼物
+2024-12-07 09:35:56,352 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=xiliniuniu
+2024-12-07 09:35:56,401 [DEBUG] [functions.py:32] 使用微信昵称: xx的龙王
+2024-12-07 09:35:56,401 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 没多的了
+2024-12-07 09:35:56,502 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiliniuniu, room_id=xiliniuniu
+2024-12-07 09:35:56,548 [DEBUG] [functions.py:32] 使用微信昵称: Lita
+2024-12-07 09:35:56,549 [DEBUG] [robot.py:180] [群聊] [文本消息] Lita: 你咋处理的
+2024-12-07 09:35:56,649 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiliniuniu, room_id=xiliniuniu
+2024-12-07 09:35:56,696 [DEBUG] [functions.py:32] 使用微信昵称: Lita
+2024-12-07 09:35:56,696 [DEBUG] [robot.py:180] [群聊] [文本消息] Lita: 我家三台没地方放
+2024-12-07 09:35:56,998 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_rtb6ydm5jgnl22, room_id=52023917674@chatroom
+2024-12-07 09:35:57,002 [DEBUG] [robot.py:180] [群聊] [文本消息] 晨爷鸭: 和
+2024-12-07 09:35:57,103 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_rtb6ydm5jgnl22, room_id=52023917674@chatroom
+2024-12-07 09:35:57,107 [DEBUG] [robot.py:180] [群聊] [文本消息] 晨爷鸭: 所以试驾一次 会有两条是吗
+2024-12-07 09:35:57,208 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_3i6ufwsxjhgj22, room_id=52023917674@chatroom
+2024-12-07 09:35:57,209 [DEBUG] [robot.py:180] [群聊] [文本消息] NIO桂馨蕊: 对呀
+2024-12-07 09:35:57,311 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_3i6ufwsxjhgj22, room_id=52023917674@chatroom
+2024-12-07 09:35:57,312 [DEBUG] [robot.py:180] [群聊] [文本消息] NIO桂馨蕊: 你一个 你朋友一个
+2024-12-07 09:35:57,413 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_rtb6ydm5jgnl22, room_id=52023917674@chatroom
+2024-12-07 09:35:57,415 [DEBUG] [robot.py:180] [群聊] [文本消息] 晨爷鸭: 好耶
+2024-12-07 09:35:57,617 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=xiliniuniu
+2024-12-07 09:35:57,674 [DEBUG] [functions.py:32] 使用微信昵称: xx的龙王
+2024-12-07 09:35:57,675 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 找人回收倒贴钱，直接扔
+2024-12-07 09:35:57,876 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiliniuniu, room_id=xiliniuniu
+2024-12-07 09:35:57,927 [DEBUG] [functions.py:32] 使用微信昵称: Lita
+2024-12-07 09:35:57,928 [DEBUG] [robot.py:180] [群聊] [文本消息] Lita: 还倒贴钱
+2024-12-07 09:35:58,029 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiliniuniu, room_id=xiliniuniu
+2024-12-07 09:35:58,079 [DEBUG] [functions.py:32] 使用微信昵称: Lita
+2024-12-07 09:35:58,079 [DEBUG] [robot.py:180] [群聊] [文本消息] Lita: 电机啥的可以拆了卖不
+2024-12-07 09:35:58,180 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=xiliniuniu
+2024-12-07 09:35:58,226 [DEBUG] [functions.py:32] 使用微信昵称: xx的龙王
+2024-12-07 09:35:58,226 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 60寸我卖过200，[破涕为笑]
+2024-12-07 09:35:58,428 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiliniuniu, room_id=xiliniuniu
+2024-12-07 09:35:58,476 [DEBUG] [functions.py:32] 使用微信昵称: Lita
+2024-12-07 09:35:58,476 [DEBUG] [robot.py:180] [群聊] [文本消息] Lita: 电视？
+2024-12-07 09:35:58,578 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=xiliniuniu
+2024-12-07 09:35:58,629 [DEBUG] [functions.py:32] 使用微信昵称: xx的龙王
+2024-12-07 09:35:58,629 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 对
+2024-12-07 09:35:58,730 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=52226030517@chatroom
+2024-12-07 09:35:58,731 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 大好周末晚上，居然没人跑团
+2024-12-07 09:35:58,832 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_bpitf0jvqjcp11, room_id=52226030517@chatroom
+2024-12-07 09:35:58,836 [DEBUG] [robot.py:180] [群聊] [文本消息] Vigny🍯: 奇奇怪怪
+2024-12-07 09:35:58,937 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=eashel, room_id=51954511498@chatroom
+2024-12-07 09:35:58,940 [DEBUG] [robot.py:180] [群聊] [文本消息] Mr.小北: 10H+观星，FQ/NQ补1000，FT/修星MS补500！来各个职业！不过万补助减半！来戒律牧SS！
+2024-12-07 09:35:59,042 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=went_1999, room_id=776823843@chatroom
+2024-12-07 09:35:59,046 [DEBUG] [robot.py:180] [群聊] [文本消息] 4-201: 物业今年改进挺大
+2024-12-07 09:35:59,146 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_r4znu8cl413i12, room_id=51954511498@chatroom
+2024-12-07 09:35:59,149 [DEBUG] [robot.py:180] [群聊] [文本消息] 一车水果蔬菜: [旺柴]
+2024-12-07 09:35:59,250 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_r4znu8cl413i12, room_id=51954511498@chatroom
+2024-12-07 09:35:59,255 [DEBUG] [robot.py:180] [群聊] [文本消息] 一车水果蔬菜: 我惩戒骑能去么
+2024-12-07 09:35:59,356 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=eashel, room_id=51954511498@chatroom
+2024-12-07 09:35:59,356 [DEBUG] [robot.py:180] [群聊] [文本消息] Mr.小北: 你来玩呗
+2024-12-07 09:35:59,457 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiliniuniu, room_id=xiliniuniu
+2024-12-07 09:35:59,515 [DEBUG] [functions.py:32] 使用微信昵称: Lita
+2024-12-07 09:35:59,515 [DEBUG] [robot.py:180] [群聊] [文本消息] Lita: 我电视是以旧换新小米自己带走的
+2024-12-07 09:35:59,616 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=xiliniuniu
+2024-12-07 09:35:59,663 [DEBUG] [functions.py:32] 使用微信昵称: xx的龙王
+2024-12-07 09:35:59,663 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 也就200哇
+2024-12-07 09:35:59,764 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_r4znu8cl413i12, room_id=51954511498@chatroom
+2024-12-07 09:35:59,765 [DEBUG] [robot.py:180] [群聊] [文本消息] 一车水果蔬菜: 哪个yy 
+2024-12-07 09:35:59,866 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=eashel, room_id=51954511498@chatroom
+2024-12-07 09:35:59,870 [DEBUG] [robot.py:180] [群聊] [文本消息] Mr.小北: 254009
+2024-12-07 09:35:59,972 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiliniuniu, room_id=xiliniuniu
+2024-12-07 09:36:00,022 [DEBUG] [functions.py:32] 使用微信昵称: Lita
+2024-12-07 09:36:00,022 [DEBUG] [robot.py:180] [群聊] [文本消息] Lita: 还没200，因为我才49寸
+2024-12-07 09:36:00,123 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_44tzqrdfmn0a12, room_id=776823843@chatroom
+2024-12-07 09:36:00,124 [DEBUG] [robot.py:180] [群聊] [文本消息] 欢乐豆: 有个保安大叔也挺好的，每天早上在那里帮我们从西门骑电动车的人按开关
+2024-12-07 09:36:00,225 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_44tzqrdfmn0a12, room_id=776823843@chatroom
+2024-12-07 09:36:00,229 [DEBUG] [robot.py:180] [群聊] [文本消息] 欢乐豆: 要是物业费能降一点就更好了[偷笑]
+2024-12-07 09:36:00,330 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_w321igyhughf12, room_id=776823843@chatroom
+2024-12-07 09:36:00,332 [DEBUG] [robot.py:180] [群聊] [文本消息] 3-202: 物业费再降，物业就废了。
+2024-12-07 09:36:00,433 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_w321igyhughf12, room_id=776823843@chatroom
+2024-12-07 09:36:00,437 [DEBUG] [robot.py:180] [群聊] [文本消息] 3-202: 所有的优质物业，都是物业费用支撑出来的。
+2024-12-07 09:36:00,537 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_0248852488314, room_id=51954511498@chatroom
+2024-12-07 09:36:00,539 [DEBUG] [robot.py:180] [群聊] [文本消息] 以奶入道—戒律牧230（目前）: @Mr.小北 等我上戒律
+2024-12-07 09:36:00,640 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_0248852488314, room_id=51954511498@chatroom
+2024-12-07 09:36:00,642 [DEBUG] [robot.py:180] [群聊] [文本消息] 以奶入道—戒律牧230（目前）: m谁
+2024-12-07 09:36:00,743 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=qq366157092, room_id=776823843@chatroom
+2024-12-07 09:36:00,748 [DEBUG] [robot.py:180] [群聊] [文本消息] jay: @4-201 入户大厅常年的狗尿味 你没有闻到吗
+2024-12-07 09:36:00,850 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_kyq6f7mnaoho11, room_id=51954511498@chatroom
+2024-12-07 09:36:00,853 [DEBUG] [robot.py:180] [群聊] [文本消息] 骑八戒FQ: NM  你们不上班的吗
+2024-12-07 09:36:00,954 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_0248852488314, room_id=51954511498@chatroom
+2024-12-07 09:36:00,958 [DEBUG] [robot.py:180] [群聊] [文本消息] 以奶入道—戒律牧230（目前）: 周五了不能半工半玩吗
+2024-12-07 09:36:01,060 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_kyq6f7mnaoho11, room_id=51954511498@chatroom
+2024-12-07 09:36:01,062 [DEBUG] [robot.py:180] [群聊] [文本消息] 骑八戒FQ: 办公电脑能玩？
+2024-12-07 09:36:01,163 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_0248852488314, room_id=51954511498@chatroom
+2024-12-07 09:36:01,167 [DEBUG] [robot.py:180] [群聊] [文本消息] 以奶入道—戒律牧230（目前）: 专门配的4060
+2024-12-07 09:36:01,268 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=xiliniuniu
+2024-12-07 09:36:01,320 [DEBUG] [functions.py:32] 使用微信昵称: xx的龙王
+2024-12-07 09:36:01,321 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 有人拉走不错了
+2024-12-07 09:36:01,422 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=eashel, room_id=51954511498@chatroom
+2024-12-07 09:36:01,423 [DEBUG] [robot.py:180] [群聊] [文本消息] Mr.小北: @以奶入道—戒律牧230（目前） 你能打暗牧么
+2024-12-07 09:36:01,524 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_3vr4um5xxrd421, room_id=51954511498@chatroom
+2024-12-07 09:36:01,526 [DEBUG] [robot.py:180] [群聊] [文本消息] 孤军: @Mr.小北 带我一个不，猎人
+2024-12-07 09:36:01,627 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_eip5p33nvys122, room_id=51954511498@chatroom
+2024-12-07 09:36:01,630 [DEBUG] [robot.py:180] [群聊] [文本消息] 化妆品: 一般的回答是“猎人满”
+2024-12-07 09:36:01,730 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_3vr4um5xxrd421, room_id=51954511498@chatroom
+2024-12-07 09:36:01,734 [DEBUG] [robot.py:180] [群聊] [文本消息] 孤军: [可怜][可怜]卑微的猎人，没有爱了
+2024-12-07 09:36:01,835 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=went_1999, room_id=776823843@chatroom
+2024-12-07 09:36:01,841 [DEBUG] [robot.py:180] [群聊] [文本消息] 4-201: 我一个月走不了一次大厅
+2024-12-07 09:36:01,942 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=went_1999, room_id=776823843@chatroom
+2024-12-07 09:36:01,943 [DEBUG] [robot.py:180] [群聊] [文本消息] 4-201: [捂脸]
+2024-12-07 09:36:02,044 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_eip5p33nvys122, room_id=51954511498@chatroom
+2024-12-07 09:36:02,046 [DEBUG] [robot.py:180] [群聊] [文本消息] 化妆品: “包团吗？”
+2024-12-07 09:36:02,147 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_3vr4um5xxrd421, room_id=51954511498@chatroom
+2024-12-07 09:36:02,150 [DEBUG] [robot.py:180] [群聊] [文本消息] 孤军: [流泪][流泪]
+2024-12-07 09:36:02,251 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_eip5p33nvys122, room_id=51954511498@chatroom
+2024-12-07 09:36:02,254 [DEBUG] [robot.py:180] [群聊] [文本消息] 化妆品: 哈哈
+2024-12-07 09:36:02,354 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_0248852488314, room_id=51954511498@chatroom
+2024-12-07 09:36:02,355 [DEBUG] [robot.py:180] [群聊] [文本消息] 以奶入道—戒律牧230（目前）: @Mr.小北 可以但是装备不强
+2024-12-07 09:36:02,456 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_0248852488314, room_id=51954511498@chatroom
+2024-12-07 09:36:02,459 [DEBUG] [robot.py:180] [群聊] [文本消息] 以奶入道—戒律牧230（目前）: 也就230的装备
+2024-12-07 09:36:02,761 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_4gfr3w89o9y012, room_id=35015461493@chatroom
+2024-12-07 09:36:02,765 [DEBUG] [robot.py:180] [群聊] [文本消息] 芋头: 腥气到
+2024-12-07 09:36:02,867 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wangjinhaok, room_id=35015461493@chatroom
+2024-12-07 09:36:02,871 [DEBUG] [robot.py:180] [群聊] [文本消息] KT🐱390 金灏呀～: 州？
+2024-12-07 09:36:02,971 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_3vr4um5xxrd421, room_id=51954511498@chatroom
+2024-12-07 09:36:02,975 [DEBUG] [robot.py:180] [群聊] [文本消息] 孤军: 我的猎人候孤独，候寂寞，候凄凉呀
+2024-12-07 09:36:03,076 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=sd9647541, room_id=51954511498@chatroom
+2024-12-07 09:36:03,079 [DEBUG] [robot.py:180] [群聊] [文本消息] 貂蝉-西司-亡昭君: [旺柴]
+2024-12-07 09:36:03,179 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiaochipaigu, room_id=51954511498@chatroom
+2024-12-07 09:36:03,183 [DEBUG] [robot.py:180] [群聊] [文本消息] 丹尼尔卡-SS SM DK NQ: 我昨天晚上梦见我叮了个布甲职业
+2024-12-07 09:36:03,284 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=sd9647541, room_id=51954511498@chatroom
+2024-12-07 09:36:03,287 [DEBUG] [robot.py:180] [群聊] [文本消息] 貂蝉-西司-亡昭君: @丹尼尔卡-SS SM DK NQ 那必须叮
+2024-12-07 09:36:03,388 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=sd9647541, room_id=51954511498@chatroom
+2024-12-07 09:36:03,391 [DEBUG] [robot.py:180] [群聊] [文本消息] 貂蝉-西司-亡昭君: 再叮个fs
+2024-12-07 09:36:03,492 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiaochipaigu, room_id=51954511498@chatroom
+2024-12-07 09:36:03,495 [DEBUG] [robot.py:180] [群聊] [文本消息] 丹尼尔卡-SS SM DK NQ: 关键我想不起来是什么职业了
+2024-12-07 09:36:03,595 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_kyq6f7mnaoho11, room_id=51954511498@chatroom
+2024-12-07 09:36:03,596 [DEBUG] [robot.py:180] [群聊] [文本消息] 骑八戒FQ: 那就所有布甲都叮一个
+2024-12-07 09:36:03,697 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=xiaochipaigu, room_id=51954511498@chatroom
+2024-12-07 09:36:03,699 [DEBUG] [robot.py:180] [群聊] [文本消息] 丹尼尔卡-SS SM DK NQ: 肯定不是法师，是术士还是牧师来着
+2024-12-07 09:36:03,800 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_kyq6f7mnaoho11, room_id=51954511498@chatroom
+2024-12-07 09:36:03,803 [DEBUG] [robot.py:180] [群聊] [文本消息] 骑八戒FQ: 既然有SS了，那就肯定是MS
+2024-12-07 09:36:03,904 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_kyq6f7mnaoho11, room_id=51954511498@chatroom
+2024-12-07 09:36:03,908 [DEBUG] [robot.py:180] [群聊] [文本消息] 骑八戒FQ: 叮
+2024-12-07 09:36:04,009 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_ahnf4vc1xija21, room_id=35015461493@chatroom
+2024-12-07 09:36:04,012 [DEBUG] [robot.py:180] [群聊] [文本消息] 摩托车突突突390 ADV: 01也想加入
+2024-12-07 09:36:04,113 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_4gfr3w89o9y012, room_id=35015461493@chatroom
+2024-12-07 09:36:04,117 [DEBUG] [robot.py:180] [群聊] [文本消息] 芋头: 01加入要被灌泡芙的
+2024-12-07 09:36:04,420 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_46811f98r6m222, room_id=56598080240@chatroom
+2024-12-07 09:36:04,424 [DEBUG] [robot.py:180] [群聊] [文本消息] 🥁 掌控家: 易丘比赛曲目必夺冠曲集1-12期共72首 包含完整鼓谱+无鼓伴奏+示范音频+视频示范！需要的私信我！
+2024-12-07 09:36:04,625 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_kyq6f7mnaoho11, room_id=51954511498@chatroom
+2024-12-07 09:36:04,630 [DEBUG] [robot.py:180] [群聊] [文本消息] 骑八戒FQ: 配装模拟的网站，知道的老铁发个呢
+2024-12-07 09:36:04,731 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=ycl521wwy, room_id=35015461493@chatroom
+2024-12-07 09:36:04,733 [DEBUG] [robot.py:180] [群聊] [文本消息] pele王wy: 我以为01误发[脸红]
+2024-12-07 09:36:04,935 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_cbnbuyzthlne22, room_id=35015461493@chatroom
+2024-12-07 09:36:04,940 [DEBUG] [robot.py:180] [群聊] [文本消息] 0: 想把眼睛戳瞎
+2024-12-07 09:36:05,142 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_luemf32d7lhi22, room_id=35015461493@chatroom
+2024-12-07 09:36:05,143 [DEBUG] [robot.py:180] [群聊] [文本消息] 茶壶: 01的最爱
+2024-12-07 09:36:05,344 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_0248852488314, room_id=51954511498@chatroom
+2024-12-07 09:36:05,345 [DEBUG] [robot.py:180] [群聊] [文本消息] 以奶入道—戒律牧230（目前）: @骑八戒FQ 蓝色隐士好像有这个功能
+2024-12-07 09:36:05,647 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=jumper_rong, room_id=wxid_18espwasnew221
+2024-12-07 09:36:05,697 [DEBUG] [functions.py:32] 使用微信昵称: xx的龙王
+2024-12-07 09:36:05,697 [DEBUG] [robot.py:180] [群聊] [文本消息] xx的龙王: 等我今晚问了荣妍，要不要明天上午一起去哦
+2024-12-07 09:36:05,798 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_kyq6f7mnaoho11, room_id=51954511498@chatroom
+2024-12-07 09:36:05,798 [DEBUG] [robot.py:180] [群聊] [文本消息] 骑八戒FQ: 666
+2024-12-07 09:36:06,000 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_eawwea4fmvli22, room_id=19559406585@chatroom
+2024-12-07 09:36:06,001 [DEBUG] [robot.py:180] [群聊] [文本消息] A范团·演绎: 感谢关注支持🫶❤
+2024-12-07 09:36:06,102 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_58c6x5fndubz11, room_id=48816297423@chatroom
+2024-12-07 09:36:06,105 [DEBUG] [robot.py:180] [群聊] [系统消息] 数9，: [系统消息]
+2024-12-07 09:36:06,206 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_asz76736a8vp31, room_id=35015461493@chatroom
+2024-12-07 09:36:06,208 [DEBUG] [robot.py:180] [群聊] [文本消息] 陈: 01能不能发点美女的
+2024-12-07 09:36:06,309 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_asz76736a8vp31, room_id=35015461493@chatroom
+2024-12-07 09:36:06,311 [DEBUG] [robot.py:180] [群聊] [文本消息] 陈: 一点开来差点吐了
+2024-12-07 09:36:06,412 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_asz76736a8vp31, room_id=35015461493@chatroom
+2024-12-07 09:36:06,414 [DEBUG] [robot.py:180] [群聊] [文本消息] 陈: 偷珠眼了
+2024-12-07 09:36:06,515 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_wppu6gxzfcgz22, room_id=52023917674@chatroom
+2024-12-07 09:36:06,517 [DEBUG] [robot.py:180] [群聊] [文本消息] 小熊Annie: 是不是现在账户里有券的，我还可以继续送朋友，邀请试驾啊？
+2024-12-07 09:36:06,618 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_18espwasnew221, room_id=wxid_18espwasnew221
+2024-12-07 09:36:06,668 [DEBUG] [functions.py:32] 使用微信昵称: 王琳琳
+2024-12-07 09:36:06,668 [DEBUG] [robot.py:180] [群聊] [文本消息] 王琳琳: 好的
+2024-12-07 09:36:06,769 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wangjinhaok, room_id=35015461493@chatroom
+2024-12-07 09:36:06,769 [DEBUG] [robot.py:180] [群聊] [文本消息] KT🐱390 金灏呀～: 平头 圆脸 络腮胡 白袜子
+2024-12-07 09:36:06,871 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_7uah7csupe8o21, room_id=48816297423@chatroom
+2024-12-07 09:36:06,872 [DEBUG] [robot.py:180] [群聊] [文本消息] 无视你们: 勾巴
+2024-12-07 09:36:06,972 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=momotou123, room_id=35015461493@chatroom
+2024-12-07 09:36:06,974 [DEBUG] [robot.py:180] [群聊] [文本消息] 末、: 3双鞋上面没有一双白袜子呀
+2024-12-07 09:36:07,075 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_58c6x5fndubz11, room_id=48816297423@chatroom
+2024-12-07 09:36:07,077 [DEBUG] [robot.py:180] [群聊] [文本消息] 数9，: ？
+2024-12-07 09:36:07,178 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_7uah7csupe8o21, room_id=48816297423@chatroom
+2024-12-07 09:36:07,180 [DEBUG] [robot.py:180] [群聊] [文本消息] 无视你们: 没人要雷神我包不好么
+2024-12-07 09:36:07,281 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_58c6x5fndubz11, room_id=48816297423@chatroom
+2024-12-07 09:36:07,285 [DEBUG] [robot.py:180] [群聊] [文本消息] 数9，: 出了吗
+2024-12-07 09:36:07,387 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_7uah7csupe8o21, room_id=48816297423@chatroom
+2024-12-07 09:36:07,388 [DEBUG] [robot.py:180] [群聊] [文本消息] 无视你们: 出了没人要
+2024-12-07 09:36:07,489 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_7uah7csupe8o21, room_id=48816297423@chatroom
+2024-12-07 09:36:07,492 [DEBUG] [robot.py:180] [群聊] [文本消息] 无视你们: 叫我打我懒
+2024-12-07 09:36:07,593 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_2605806056922, room_id=53512817922@chatroom
+2024-12-07 09:36:07,594 [DEBUG] [robot.py:180] [群聊] [文本消息] 独行侠: 各位大佬，大家有没有试过自动加好友，是不是可以的？
+2024-12-07 09:36:07,695 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_3i6ufwsxjhgj22, room_id=52023917674@chatroom
+2024-12-07 09:36:07,697 [DEBUG] [robot.py:180] [群聊] [文本消息] NIO桂馨蕊: 是的
+2024-12-07 09:36:07,898 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=yang_fs, room_id=53512817922@chatroom
+2024-12-07 09:36:07,901 [DEBUG] [robot.py:180] [群聊] [文本消息] 刘小洋: 新版的
+2024-12-07 09:36:08,002 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=yang_fs, room_id=53512817922@chatroom
+2024-12-07 09:36:08,007 [DEBUG] [robot.py:180] [群聊] [文本消息] 刘小洋: 不行
+2024-12-07 09:36:08,108 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=yang_fs, room_id=53512817922@chatroom
+2024-12-07 09:36:08,110 [DEBUG] [robot.py:180] [群聊] [文本消息] 刘小洋: 试过了
+2024-12-07 09:36:08,210 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=yang_fs, room_id=53512817922@chatroom
+2024-12-07 09:36:08,213 [DEBUG] [robot.py:180] [群聊] [文本消息] 刘小洋: 通不过
+2024-12-07 09:36:08,314 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_gxfkuncyzau912, room_id=52023917674@chatroom
+2024-12-07 09:36:08,320 [DEBUG] [robot.py:180] [群聊] [文本消息] 失眠的冰美式: 天天试驾
+2024-12-07 09:36:08,421 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_gxfkuncyzau912, room_id=52023917674@chatroom
+2024-12-07 09:36:08,422 [DEBUG] [robot.py:180] [群聊] [文本消息] 失眠的冰美式: 明天就能做蔚来新员工了
+2024-12-07 09:36:08,724 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=dazzlerain, room_id=51954511498@chatroom
+2024-12-07 09:36:08,728 [DEBUG] [robot.py:180] [群聊] [文本消息] 吗喽: @骑八戒FQ 八戒你用增强打傻馒有点占便宜了[旺柴]
+2024-12-07 09:36:08,829 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_3i6ufwsxjhgj22, room_id=52023917674@chatroom
+2024-12-07 09:36:08,832 [DEBUG] [robot.py:180] [群聊] [文本消息] NIO桂馨蕊: 中午一起去吃煲城香
+2024-12-07 09:36:09,133 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_rtb6ydm5jgnl22, room_id=52023917674@chatroom
+2024-12-07 09:36:09,136 [DEBUG] [robot.py:180] [群聊] [文本消息] 晨爷鸭: 贪心一点就是八条
+2024-12-07 09:36:09,237 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_rtb6ydm5jgnl22, room_id=52023917674@chatroom
+2024-12-07 09:36:09,240 [DEBUG] [robot.py:180] [群聊] [文本消息] 晨爷鸭: 不给你朋友哈哈哈
+2024-12-07 09:36:09,341 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_wppu6gxzfcgz22, room_id=52023917674@chatroom
+2024-12-07 09:36:09,342 [DEBUG] [robot.py:180] [群聊] [文本消息] 小熊Annie: 格局打开了···
+2024-12-07 09:36:09,443 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_kyq6f7mnaoho11, room_id=51954511498@chatroom
+2024-12-07 09:36:09,444 [DEBUG] [robot.py:180] [群聊] [文本消息] 骑八戒FQ: 那傻馒装等多少
+2024-12-07 09:36:09,545 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_kyq6f7mnaoho11, room_id=51954511498@chatroom
+2024-12-07 09:36:09,546 [DEBUG] [robot.py:180] [群聊] [文本消息] 骑八戒FQ: 我才多少哦
+2024-12-07 09:36:09,748 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=, room_id=52023917674@chatroom
+2024-12-07 09:36:09,804 [ERROR] [functions.py:44] 获取用户名称时出错: 'Wcf' object has no attribute 'group_users'
+2024-12-07 09:36:09,804 [DEBUG] [robot.py:180] [群聊] [系统消息] 骰子手: [系统消息]
+2024-12-07 09:36:09,905 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=, room_id=52023917674@chatroom
+2024-12-07 09:36:09,962 [ERROR] [functions.py:44] 获取用户名称时出错: 'Wcf' object has no attribute 'group_users'
+2024-12-07 09:36:09,962 [DEBUG] [robot.py:180] [群聊] [系统消息] 骰子手: [系统消息]
+2024-12-07 09:36:10,062 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_3i6ufwsxjhgj22, room_id=52023917674@chatroom
+2024-12-07 09:36:10,063 [DEBUG] [robot.py:180] [群聊] [文本消息] NIO桂馨蕊: 晚上当豌豆公主
+2024-12-07 09:36:10,667 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_8fdzz4j2fqg221, room_id=52023917674@chatroom
+2024-12-07 09:36:10,667 [DEBUG] [robot.py:180] [群聊] [文本消息] 7.o.: 什么好吃的
+2024-12-07 09:36:10,769 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_3i6ufwsxjhgj22, room_id=52023917674@chatroom
+2024-12-07 09:36:10,771 [DEBUG] [robot.py:180] [群聊] [文本消息] NIO桂馨蕊: 煲仔饭 很香
+2024-12-07 09:36:10,888 [INFO] [main.py:103] 收到停止信号，正在停止骰子机器人...
+2024-12-07 09:36:10,939 [DEBUG] [nng.py:1336] Pipe callback event 2
+2024-12-07 09:36:10,942 [DEBUG] [nng.py:1336] Pipe callback event 2
+2024-12-07 09:36:11,945 [INFO] [main.py:108] 骰子机器人已停止
+2024-12-07 09:39:17,603 [INFO] [client.py:73] wcferry version: 39.3.3.2
+2024-12-07 09:39:19,621 [DEBUG] [nng.py:1336] Pipe callback event 0
+2024-12-07 09:39:19,621 [DEBUG] [nng.py:1336] Pipe callback event 1
+2024-12-07 09:39:19,621 [INFO] [client.py:110] 等待微信登录...
+2024-12-07 09:39:19,622 [INFO] [main.py:59] 正在启动骰子机器人...
+2024-12-07 09:39:19,701 [INFO] [main.py:83] 骰子机器人已启动，开始接收消息
+2024-12-07 09:39:19,702 [DEBUG] [nng.py:1336] Pipe callback event 0
+2024-12-07 09:39:19,702 [DEBUG] [nng.py:1336] Pipe callback event 1
+2024-12-07 09:40:57,141 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=dazzlerain, room_id=48816297423@chatroom
+2024-12-07 09:40:57,142 [DEBUG] [robot.py:180] [群聊] [文本消息] 吕小布: 牧师身上还有5w多
+2024-12-07 09:41:14,583 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=dazzlerain, room_id=48816297423@chatroom
+2024-12-07 09:41:14,584 [DEBUG] [robot.py:180] [群聊] [文本消息] 吕小布: @数9， 你记得喊我
+2024-12-07 09:41:32,974 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_9yz4nnw0sp8y22, room_id=wxid_9yz4nnw0sp8y22
+2024-12-07 09:41:33,029 [DEBUG] [functions.py:32] 使用微信昵称: 砂金
+2024-12-07 09:41:33,029 [DEBUG] [robot.py:180] [群聊] [文本消息] 砂金: .help
+2024-12-07 09:41:45,394 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_9yz4nnw0sp8y22, room_id=wxid_9yz4nnw0sp8y22
+2024-12-07 09:41:45,449 [DEBUG] [functions.py:32] 使用微信昵称: 砂金
+2024-12-07 09:41:45,449 [DEBUG] [robot.py:180] [群聊] [文本消息] 砂金: .jrrp
+2024-12-07 09:41:45,449 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_9yz4nnw0sp8y22, room_id=wxid_9yz4nnw0sp8y22
+2024-12-07 09:41:45,496 [DEBUG] [functions.py:32] 使用微信昵称: 砂金
+2024-12-07 09:41:45,497 [DEBUG] [functions.py:89] 生成今日人品信息: 【砂金】今日人品：83
+2024-12-07 09:42:16,965 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_9yz4nnw0sp8y22, room_id=wxid_9yz4nnw0sp8y22
+2024-12-07 09:42:17,023 [DEBUG] [functions.py:32] 使用微信昵称: 砂金
+2024-12-07 09:42:17,023 [DEBUG] [robot.py:180] [群聊] [文本消息] 砂金: .sys
+2024-12-07 09:42:30,130 [INFO] [main.py:103] 收到停止信号，正在停止骰子机器人...
+2024-12-07 09:42:30,192 [DEBUG] [nng.py:1336] Pipe callback event 2
+2024-12-07 09:42:30,195 [DEBUG] [nng.py:1336] Pipe callback event 2
+2024-12-07 09:42:31,195 [INFO] [main.py:108] 骰子机器人已停止
+2024-12-07 09:49:55,236 [INFO] [client.py:73] wcferry version: 39.3.3.2
+2024-12-07 09:49:57,254 [DEBUG] [nng.py:1336] Pipe callback event 0
+2024-12-07 09:49:57,254 [DEBUG] [nng.py:1336] Pipe callback event 1
+2024-12-07 09:49:57,254 [INFO] [client.py:110] 等待微信登录...
+2024-12-07 09:49:57,255 [INFO] [main.py:59] 正在启动骰子机器人...
+2024-12-07 09:49:57,324 [INFO] [main.py:83] 骰子机器人已启动，开始接收消息
+2024-12-07 09:49:57,325 [DEBUG] [nng.py:1336] Pipe callback event 0
+2024-12-07 09:49:57,325 [DEBUG] [nng.py:1336] Pipe callback event 1
+2024-12-07 09:49:57,655 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=sun_ning2010, room_id=52023917674@chatroom
+2024-12-07 09:49:57,657 [DEBUG] [robot.py:180] [群聊] [文本消息] 孙宁: @NIO桂馨蕊 
+2024-12-07 09:50:04,495 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_9yz4nnw0sp8y22, room_id=wxid_9yz4nnw0sp8y22
+2024-12-07 09:50:04,546 [DEBUG] [functions.py:32] 使用微信昵称: 砂金
+2024-12-07 09:50:04,546 [DEBUG] [robot.py:180] [群聊] [文本消息] 砂金: .jrrp
+2024-12-07 09:50:04,546 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_9yz4nnw0sp8y22, room_id=wxid_9yz4nnw0sp8y22
+2024-12-07 09:50:04,596 [DEBUG] [functions.py:32] 使用微信昵称: 砂金
+2024-12-07 09:50:04,597 [DEBUG] [functions.py:112] 生成今日人品信息: 【砂金】今日人品：83 (大吉)
+2024-12-07 09:50:12,382 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=sun_ning2010, room_id=52023917674@chatroom
+2024-12-07 09:50:12,384 [DEBUG] [robot.py:180] [群聊] [文本消息] 孙宁: 然后就可以免费换电了
+2024-12-07 09:50:13,952 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_9yz4nnw0sp8y22, room_id=wxid_9yz4nnw0sp8y22
+2024-12-07 09:50:14,014 [DEBUG] [functions.py:32] 使用微信昵称: 砂金
+2024-12-07 09:50:14,014 [DEBUG] [robot.py:180] [群聊] [文本消息] 砂金: .jrrp
+2024-12-07 09:50:14,014 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_9yz4nnw0sp8y22, room_id=wxid_9yz4nnw0sp8y22
+2024-12-07 09:50:14,077 [DEBUG] [functions.py:32] 使用微信昵称: 砂金
+2024-12-07 09:50:14,077 [DEBUG] [functions.py:112] 生成今日人品信息: 兄台今天已经算过啦，明日再来吧！
+2024-12-07 09:50:15,132 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_sjjc1043wu4h22, room_id=48816297423@chatroom
+2024-12-07 09:50:15,134 [DEBUG] [robot.py:180] [群聊] [文本消息] 次不次汤圆🍼: 你们怎么那么早
+2024-12-07 09:51:37,620 [DEBUG] [functions.py:21] 开始获取用户信息: wxid=wxid_kyq6f7mnaoho11, room_id=51954511498@chatroom
+2024-12-07 09:51:37,622 [DEBUG] [robot.py:180] [群聊] [文本消息] 骑八戒FQ: 寂寞啊
+2024-12-07 09:51:40,725 [INFO] [main.py:103] 收到停止信号，正在停止骰子机器人...
+2024-12-07 09:51:40,779 [DEBUG] [nng.py:1336] Pipe callback event 2
+2024-12-07 09:51:40,783 [DEBUG] [nng.py:1336] Pipe callback event 2
+2024-12-07 09:51:41,785 [INFO] [main.py:108] 骰子机器人已停止
