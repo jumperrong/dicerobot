@@ -1,0 +1,161 @@
+{
+  "pc": {
+    "name": "",
+    "playerName": "",
+    "time": "",
+    "job": "",
+    "age": "",
+    "gender": "",
+    "location": "",
+    "hometown": "",
+    "attributes": {
+      "str": 200,
+      "dex": 55,
+      "con": 65,
+      "app": 65,
+      "pow": 55,
+      "siz": 50,
+      "edu": 75,
+      "int": 75,
+      "luc": 65
+    },
+    "battleAttributes": {
+      "db": "2D6",
+      "size": "3",
+      "mov": "9"
+    },
+    "pointValues": {
+      "pro": "500"
+    },
+    "proSkills": [
+      "电气维修",
+      "侦查"
+    ],
+    "skillPoints": [
+      [
+        "侦查",
+        {
+          "c": false,
+          "p": 75
+        }
+      ],
+      [
+        [
+          "射击",
+          "手枪",
+          0
+        ],
+        {
+          "p": 80
+        }
+      ],
+      [
+        "电气维修",
+        {
+          "p": 90
+        }
+      ],
+      [
+        "精神分析",
+        {
+          "p": 99
+        }
+      ]
+    ],
+    "weapons": [
+      {
+        "name": "徒手格斗",
+        "skill": "格斗(斗殴)",
+        "dam": "1D3+DB",
+        "tho": 0,
+        "range": "接触",
+        "round": "1",
+        "num": "",
+        "err": "",
+        "price": "",
+        "time": "1920s，现代"
+      }
+    ],
+    "stories": {
+      "app": "",
+      "belief": "",
+      "IPerson": "",
+      "IPlace": "",
+      "IItem": "",
+      "trait": "",
+      "scar": "",
+      "mad": "",
+      "desc": ""
+    },
+    "assets": {
+      "cash": "",
+      "consumption": "",
+      "assets": "",
+      "items": "",
+      "magicItems": "",
+      "magics": "",
+      "touches": ""
+    },
+    "experiencedModules": "",
+    "friends": "",
+    "deriveAttributes": {
+      "sanity": {
+        "start": "55"
+      },
+      "hp": {
+        "start": "11"
+      },
+      "mp": {
+        "start": "11"
+      }
+    }
+  },
+  "viewData": {
+    "showingChildSkills": {
+      "母语": [
+        ""
+      ],
+      "外语": [
+        "",
+        ""
+      ],
+      "生存": [
+        "",
+        "",
+        ""
+      ],
+      "技艺": [
+        "",
+        "",
+        ""
+      ],
+      "驾驶": [
+        ""
+      ],
+      "格斗": [
+        "斗殴",
+        "",
+        ""
+      ],
+      "射击": [
+        "手枪",
+        "步/霰",
+        ""
+      ],
+      "科学": [
+        "",
+        "",
+        ""
+      ],
+      "": [
+        "",
+        "",
+        ""
+      ]
+    },
+    "skillLimits": {
+      "pro": 70,
+      "interest": 50
+    }
+  }
+}

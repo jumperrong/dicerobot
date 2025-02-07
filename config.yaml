@@ -1,0 +1,106 @@
+# AI功能配置
+ai:
+  qwen:
+    api_key: sk-b07759a75307482785cf2d30613859ac  # 通义千问API密钥
+    app_id: c6d70fbb1b214018a8f80e5ea0caf8b8      # 应用ID
+    # 管理员配置
+    control:
+      admin_wxid:  # 管理员微信ID列表
+      - jumper_rong
+      - wxid_9yz4nnw0sp8y22
+
+    # 群聊配置
+    group_chat:
+      enabled_rooms:  # 启用AI功能的群聊ID列表
+      - 52275509390@chatroom
+    logging:
+      show_messages: true  # 是否显示消息日志
+      file:
+        max_size: 10       # 日志文件最大大小(MB)
+        path: logs/ai.log  # 日志文件路径
+      format: '%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s'
+      level: DEBUG
+
+    model: qwen-turbo  # 使用的AI模型
+    # 私聊配置
+    private_chat:
+      enabled: false  # 是否启用私聊功能
+      whitelist:       # 私聊白名单
+      - jumper_rong
+      - wxid_9yz4nnw0sp8y22
+
+    # 天气功能配置
+    weather:
+      api_key: 01db076f4a924b51b3fab4725dcf380e  # 和风天气API密钥
+      # API请求重试配置
+      retry:
+        count: 3    # 最大重试次数
+        delay: 3    # 基础重试延迟(秒)
+      # 天气API接口地址
+      api_urls:
+        geo: https://geoapi.qweather.com/v2/city/lookup          # 城市查询
+        indices: https://devapi.qweather.com/v7/indices/1d       # 生活指数
+        warning: https://devapi.qweather.com/v7/warning/now      # 天气预警
+        weather: https://devapi.qweather.com/v7/weather/now      # 实时天气
+        weather_3d: https://devapi.qweather.com/v7/weather/3d    # 3天预报
+        weather_7d: https://devapi.qweather.com/v7/weather/7d    # 7天预报
+
+      # 定时播报配置
+      daily_report:
+        enabled: true           # 是否启用定时播报
+        broadcast_times:        # 播报时间点
+        - "06:00"
+        - "12:00"
+        - "18:00"
+      default_city: 无锡       # 默认城市
+      # 预警配置
+      warning:
+        enabled: true          # 是否启用预警功能
+        interval: 10           # 预警检查间隔(分钟)
+
+# 机器人基本配置
+bot:
+  name: 骰子机器人
+  version: 1.1.0
+
+# 牌堆配置
+decks:
+  108bro: 108将.txt
+  dmt: 万象无常.json
+  injury: 侠界伤残.json
+  wm: 狂野法术浪涌.json
+
+# 文件路径配置
+files:
+  deck_path: decks           # 牌堆文件目录
+  dnd_data: DND5E23_4_2.json  # D&D规则数据文件
+  log_file: logs/robot.log   # 机器人日志文件
+
+# 日志配置
+logging:
+  common:
+    format: '%(asctime)s [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s'
+    level: DEBUG
+    max_size: 10  # MB
+  files:
+    robot: logs/robot.log
+    ai: logs/ai.log
+
+# 消息显示配置
+message_display:
+  type_1: true      # 文本消息
+  type_10000: true  # 系统消息
+  type_3: false     # 图片消息
+  type_34: false    # 语音消息
+  type_37: false    # 好友确认消息
+  type_40: false    # 好友请求消息
+  type_41: false    # 名片消息
+  type_42: false    # 视频消息
+  type_43: false    # 视频通话消息
+  type_44: false    # 语音通话消息
+  type_47: false    # 表情消息
+  type_48: false    # 位置消息
+  type_49: false    # 分享消息
+  type_50: false    # 语音实时通信消息
+  type_51: false    # 状态通知消息
+  type_62: false    # 小视频消息

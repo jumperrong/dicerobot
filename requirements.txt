@@ -1,0 +1,16 @@
+# 基础依赖
+wcferry>=39.0.9.1
+pyyaml>=6.0.1
+ruamel.yaml>=0.17.40  # 用于保留YAML文件格式和注释
+
+# AI和天气服务
+dashscope>=1.13.3     # 通义千问API
+aiohttp>=3.9.1        # 异步HTTP客户端
+
+# 日志和工具
+python-logging>=0.4.9.6
+
+# 开发工具
+pytest>=7.4.3         # 测试框架
+black>=23.11.0        # 代码格式化
+pylint>=3.0.2         # 代码检查 
