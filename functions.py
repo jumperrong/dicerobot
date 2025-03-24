@@ -279,7 +279,7 @@ def load_deck(deck_name: str, config: dict) -> list:
         deck_path = config.get('files', {}).get('deck_path', 'decks')
         current_dir = os.path.dirname(os.path.abspath(__file__))
         file_path = os.path.join(current_dir, deck_path, deck_filename)
-        logger.debug(f"完整的牌���文件路径: {file_path}")
+        logger.debug(f"完整的牌堆文件路径: {file_path}")
         
         if not os.path.exists(file_path):
             # 尝试txt格式
@@ -422,7 +422,7 @@ def handle_drawhelp_command(wcf: Wcf, msg: WxMsg, config: dict) -> None:
     try:
         decks_info = config.get('decks', {})
         if not decks_info:
-            reply = "未配置任何牌��。"
+            reply = "未配置任何牌堆。"
         else:
             deck_details = []
             for deck_name, deck_file in decks_info.items():

@@ -32,7 +32,7 @@ def load_config() -> dict:
         
         # 显示基础配置信息
         logger.info("\n=== 骰子机器人基础配置 ===")
-        logger.info(f"机器人���称: {config.get('bot', {}).get('name', '未设置')}")
+        logger.info(f"机器人名称: {config.get('bot', {}).get('name', '未设置')}")
         logger.info(f"版本: {config.get('bot', {}).get('version', '未设置')}")
         
         # 显示日志配置
@@ -58,7 +58,7 @@ def load_config() -> dict:
         if app_id:
             logger.info(f"应用ID: {app_id}")
         else:
-            logger.warning("应用ID未��置")
+            logger.warning("应用ID未配置")
         
         logger.info(f"模型: {ai_config.get('model', 'qwen-turbo')}")
         
@@ -230,7 +230,7 @@ def main():
                         )
                     )
                 
-                # 获���消息
+                # 获取消息
                 msg = wcf.get_msg()
                 if msg:
                     handle_message(wcf, msg, config, dnd_data)
