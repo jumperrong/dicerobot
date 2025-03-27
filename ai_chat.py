@@ -60,6 +60,11 @@ class QwenChat:
         enabled_rooms = self.group_config.get('enabled_rooms', [])
         self.enabled_rooms = set(enabled_rooms)
         
+        # 添加私聊配置
+        private_chat_config = self.group_config.get('private_chat', {})
+        self.private_chat_enabled = private_chat_config.get('enabled', False)
+        self.private_chat_whitelist = set(private_chat_config.get('whitelist', []))
+        
         # 设置dashscope的API key和应用ID
         if self.api_key:
             dashscope.api_key = self.api_key
@@ -293,7 +298,7 @@ class QwenChat:
                 status = "开启" if enable else "关闭"
                 return f"私聊功能已经处于{status}状态"
         except Exception as e:
-            logger.error(f"切换私聊功能失��: {e}")
+            logger.error(f"切换私聊功能失败: {e}")
             return "切换私聊功能失败"
     
     def is_private_chat_allowed(self, user_wxid: str) -> bool:
@@ -335,7 +340,7 @@ class QwenChat:
             return "AI功能测试失败，请查看日志"
     
     def add_to_whitelist(self, user_wxid: str) -> bool:
-        """添��用户到白名单"""
+        """添加用户到白名单"""
         try:
             if user_wxid in self.private_chat_whitelist:
                 logger.info(f"用户 {user_wxid} 已在白名单中")
@@ -345,7 +350,7 @@ class QwenChat:
             new_whitelist = self.private_chat_whitelist.copy()
             new_whitelist.add(user_wxid)
             
-            # 更新配置文���
+            # 更新配置文件
             if self.update_whitelist_config(new_whitelist):
                 logger.info(f"已添加用户 {user_wxid} 到私聊白名单")
                 return True

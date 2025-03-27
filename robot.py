@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from typing import Callable, Dict, Optional, List, Any, Union
 from dataclasses import dataclass
 from wcferry import Wcf, WxMsg
@@ -17,6 +18,11 @@ from dice_roller import process_roll_command, format_reply_message
 from ai_chat import QwenChat, handle_ai_chat
 from datetime import datetime
 import hashlib
+from character import character_manager
+import xml.etree.ElementTree as ET
+import shutil  # 添加到文件顶部的导入部分
+import json
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +70,7 @@ class CommandHandler:
         if not hasattr(self, 'initialized'):
             self.commands: Dict[str, CommandInfo] = {}
             self.qwen = None
+            self.waiting_for_character_file = {}  # Dict[str, Optional[str]]  # user_id -> room_id
             self._register_commands()
             self.initialized = True
     
@@ -164,6 +171,30 @@ class CommandHandler:
                 needs_config=True,
                 needs_dnd_data=False,
                 description='AI功能控制（仅管理员可用）'
+            ),
+            '.char': CommandInfo(
+                handler=self.handle_character_command,
+                needs_config=False,
+                needs_dnd_data=False,
+                description='角色卡管理'
+            ),
+            '.c': CommandInfo(
+                handler=self.handle_check_command,
+                needs_config=False,
+                needs_dnd_data=False,
+                description='进行技能检定'
+            ),
+            '.grow': CommandInfo(
+                handler=self.handle_grow_command,
+                needs_config=False,
+                needs_dnd_data=False,
+                description='进行技能成长\n用法: .grow <技能名>'
+            ),
+            '.setgrow': CommandInfo(
+                handler=self.handle_setgrow_command,
+                needs_config=False,
+                needs_dnd_data=False,
+                description='[管理员] 设置角色成长次数\n用法: .setgrow <次数>'
             )
         }
     
@@ -232,7 +263,7 @@ class CommandHandler:
             
             handler = command_info.handler
             
-            # 检查是否异步处理数
+            # 检查是否异步处理函数
             if asyncio.iscoroutinefunction(handler):
                 loop = asyncio.get_event_loop()
                 loop.run_until_complete(handler(wcf, msg, **kwargs))
@@ -251,7 +282,7 @@ class CommandHandler:
             else:
                 wcf.send_text(content, msg.sender)
         except Exception as e:
-            logger.error(f"发送消息失败: {e}", exc_info=True)
+            logger.error(f"发送消息失败: {e}")
     
     async def handle_ai_command(self, wcf: Wcf, msg: WxMsg, config: dict = None, **kwargs) -> None:
         """处理 AI 聊天命令"""
@@ -439,6 +470,242 @@ AI功能控制:
         error_msg = "获取天气信息失败,请稍后重试"
         self._send_message(wcf, msg, error_msg)
 
+    async def handle_character_command(self, wcf: Wcf, msg: WxMsg, **kwargs) -> None:
+        """处理角色卡相关命令"""
+        try:
+            parts = msg.content.split('.char', 1)[1].strip().split()
+            if not parts:
+                self._send_message(wcf, msg, "请使用 .char help 查看角色卡命令帮助")
+                return
+                
+            subcmd = parts[0].lower()
+            
+            if subcmd == "list":
+                # 显示所有角色卡列表
+                info = character_manager.list_characters()
+                self._send_message(wcf, msg, info)
+                return
+                
+            elif subcmd == "use":
+                if len(parts) < 2:
+                    self._send_message(wcf, msg, "请指定角色名称，如: .char use 川尻早人")
+                    return
+                char_name = ' '.join(parts[1:])
+                success, message = character_manager.use_character(msg.sender, msg.roomid, char_name)
+                self._send_message(wcf, msg, message)
+                return
+                
+            elif subcmd == "release":
+                success, message = character_manager.release_character(msg.sender, msg.roomid)
+                self._send_message(wcf, msg, message)
+                return
+                
+            elif subcmd == "info":
+                if len(parts) < 2:
+                    char_name = character_manager.get_current_character(msg.sender, msg.roomid)
+                    if not char_name:
+                        self._send_message(wcf, msg, "请指定角色名称，或使用 .char use 设置当前角色")
+                        return
+                else:
+                    char_name = ' '.join(parts[1:])
+                
+                info = character_manager.show_character_info(char_name)
+                self._send_message(wcf, msg, info)
+                return
+                
+            elif subcmd == "load":
+                # 等待用户上传角色卡文件
+                self.waiting_for_character_file[msg.sender] = msg.roomid
+                help_text = "请上传JSON格式的角色卡文件（最大1MB）"
+                self._send_message(wcf, msg, help_text)
+                return
+                
+            elif subcmd == "status":
+                # 显示所有角色卡的使用状态
+                info = character_manager.show_character_status()
+                self._send_message(wcf, msg, info)
+                return
+                
+            elif subcmd == "force-release":
+                # 检查是否是管理员
+                if not self.qwen.is_admin(msg.sender):
+                    self._send_message(wcf, msg, "只有管理员可以使用此命令")
+                    return
+                    
+                if len(parts) < 2:
+                    self._send_message(wcf, msg, "请指定要释放的角色名称")
+                    return
+                    
+                char_name = ' '.join(parts[1:])
+                success, message = character_manager.force_release_character(char_name)
+                self._send_message(wcf, msg, message)
+                return
+                
+            elif subcmd == "history":
+                if len(parts) < 2:
+                    char_name = character_manager.get_current_character(msg.sender, msg.roomid)
+                    if not char_name:
+                        self._send_message(wcf, msg, "请指定角色名称，或使用 .char use 设置当前角色")
+                        return
+                else:
+                    char_name = ' '.join(parts[1:])
+                
+                info = character_manager.show_character_history(char_name)
+                self._send_message(wcf, msg, info)
+                return
+                
+            elif subcmd == "help":
+                help_text = """🎭 角色卡管理命令：
+• .char load - 上传角色卡文件
+• .char list - 显示所有可用角色卡
+• .char info [角色名] - 显示角色卡基本信息
+• .char use <角色名> - 设置当前使用的角色
+• .char release - 释放当前使用的角色
+• .char status - 显示所有角色卡的使用状态
+• .char history [角色名] - 显示角色卡操作历史
+• .char force-release <角色名> - [管理员] 强制释放角色卡
+• .char help - 显示本帮助信息
+
+注意：
+1. 一个角色卡同时只能被一个用户使用
+2. 使用角色卡后，可以省略角色名称
+3. 使用 .char release 释放当前使用的角色
+4. 角色卡文件大小不能超过1MB"""
+                self._send_message(wcf, msg, help_text)
+                return
+                
+            else:
+                self._send_message(wcf, msg, f"未知的角色卡命令: {subcmd}\n使用 .char help 查看帮助")
+                
+        except Exception as e:
+            logger.error(f"处理角色卡命令出错: {e}")
+            self._send_message(wcf, msg, "处理命令时出错，请重试")
+
+    def handle_check_command(self, wcf: Wcf, msg: WxMsg, **kwargs) -> None:
+        """处理技能检定命令"""
+        try:
+            # 获取技能名称
+            skill_name = msg.content.split('.c', 1)[1].strip()
+            if not skill_name:
+                self._send_message(wcf, msg, "请指定要检定的技能，如：.c 侦查")
+                return
+            
+            # 调用 check_skill 方法时传递所有必需参数
+            success, message = character_manager.check_skill(
+                user_id=msg.sender,
+                room_id=msg.roomid,
+                skill_name=skill_name
+            )
+            
+            self._send_message(wcf, msg, message)
+            
+        except Exception as e:
+            logger.error(f"处理检定命令出错: {e}")
+            self._send_message(wcf, msg, "处理命令时出错，请重试")
+
+    async def handle_grow_command(self, wcf: Wcf, msg: WxMsg, **kwargs) -> None:
+        """处理技能成长命令"""
+        try:
+            parts = msg.content.split('.grow', 1)[1].strip().split()
+            if not parts:
+                self._send_message(wcf, msg, "请指定要成长的技能，如：.grow 侦查")
+                return
+            
+            if parts[0].lower() == "history":
+                # 处理成长历史查询
+                if len(parts) < 2:
+                    char_name = character_manager.get_current_character(msg.sender, msg.roomid)
+                    if not char_name:
+                        self._send_message(wcf, msg, "请指定角色名称，或使用 .char use 设置当前角色")
+                        return
+                else:
+                    char_name = ' '.join(parts[1:])
+                
+                history = character_manager.show_growth_history(char_name)
+                self._send_message(wcf, msg, history)
+                return
+            
+            skill_name = ' '.join(parts)
+            success, message = character_manager.grow_skill(msg.sender, msg.roomid, skill_name)
+            self._send_message(wcf, msg, message)
+            
+        except Exception as e:
+            logger.error(f"处理技能成长命令出错: {e}")
+            self._send_message(wcf, msg, "处理命令时出错，请重试")
+
+    async def handle_setgrow_command(self, wcf: Wcf, msg: WxMsg, **kwargs) -> None:
+        """处理设置成长次数命令"""
+        try:
+            # 检查是否是管理员
+            if not self.qwen or not self.qwen.is_admin(msg.sender):
+                self._send_message(wcf, msg, "只有管理员可以使用此命令")
+                return
+            
+            parts = msg.content.split('.setgrow', 1)[1].strip().split()
+            if len(parts) < 2:
+                self._send_message(wcf, msg, "请指定角色名和成长次数，如：.setgrow 川尻早人 5")
+                return
+            
+            try:
+                points = int(parts[-1])
+                char_name = ' '.join(parts[:-1])
+            except ValueError:
+                self._send_message(wcf, msg, "成长次数必须是数字")
+                return
+            
+            if points < 0:
+                self._send_message(wcf, msg, "成长次数不能为负数")
+                return
+            
+            success, message = character_manager.db.set_growth_points(char_name, points)
+            self._send_message(wcf, msg, message)
+            
+        except Exception as e:
+            logger.error(f"处理设置成长次数命令出错: {e}")
+            self._send_message(wcf, msg, "处理命令时出错，请重试")
+
+class DiceRobot:
+    async def handle_message(self, wcf: Wcf, msg: WxMsg):
+        """主消息处理函数"""
+        try:
+            # 1. 快速的数据库检查可以保持同步
+            if not self.db.is_group_enabled(msg.roomid):
+                return
+                
+            # 2. 耗时的命令处理使用异步
+            if msg.content.startswith('.char'):
+                await self.handle_character_command(wcf, msg)
+            elif msg.content.startswith('.grow'):
+                await self.handle_growth_command(wcf, msg)
+            elif msg.content.startswith('.ai'):
+                await self.handle_ai_chat(wcf, msg)
+                
+        except Exception as e:
+            logger.error(f"处理消息失败: {e}")
+            
+    async def handle_character_command(self, wcf: Wcf, msg: WxMsg):
+        """处理角色卡命令"""
+        try:
+            parts = msg.content.split()
+            
+            # 3. 简单的数据库操作可以保持同步
+            if parts[1] == 'list':
+                chars = self.db.get_character_list(msg.sender)
+                await self.send_message(wcf, msg, format_char_list(chars))
+                
+            # 4. 复杂或耗时的操作使用异步
+            elif parts[1] == 'use':
+                char_name = ' '.join(parts[2:])
+                result = await self.character_manager.use_character(
+                    msg.sender,
+                    msg.roomid,
+                    char_name
+                )
+                await self.send_message(wcf, msg, result)
+                
+        except Exception as e:
+            logger.error(f"处理角色卡命令失败: {e}")
+
 def handle_message(wcf: Wcf, msg: WxMsg, config: dict, dnd_data: dict) -> None:
     """处理收到的消息"""
     try:
@@ -496,6 +763,111 @@ def handle_message(wcf: Wcf, msg: WxMsg, config: dict, dnd_data: dict) -> None:
                 loop = asyncio.get_event_loop()
                 loop.run_until_complete(handle_ai_chat(wcf, msg, handler.qwen))
                 
+        # 处理文件消息，用于加载角色卡
+        elif msg.type == 49:  # 文件消息类型
+            try:
+                # 检查是否是通过 .char load 命令触发的文件上传
+                handler = CommandHandler(config)
+                if msg.sender not in handler.waiting_for_character_file:
+                    return
+                    
+                # 获取对应的群聊ID
+                room_id = handler.waiting_for_character_file[msg.sender]
+                if room_id != msg.roomid:
+                    return
+                    
+                try:
+                    # 解析文件信息
+                    root = ET.fromstring(msg.content)
+                    appmsg = root.find('appmsg')
+                    if appmsg is None or appmsg.find('title') is None:
+                        return
+                        
+                    title = appmsg.find('title').text
+                    if not title.lower().endswith('.json'):
+                        wcf.send_text("请上传JSON格式的角色卡文件", msg.roomid or msg.sender)
+                        return
+                        
+                    # 读取源文件内容
+                    source_path = msg.extra.replace('/', '\\')
+                    logger.debug(f"等待文件: {source_path}")
+                    
+                    # 等待并读取文件
+                    if not wait_for_file(source_path):
+                        wcf.send_text("等待文件超时，请重试", msg.roomid or msg.sender)
+                        return
+                    
+                    try:
+                        with open(source_path, 'r', encoding='utf-8') as f:
+                            file_content = f.read()
+                            
+                        # 预验证JSON格式
+                        try:
+                            json.loads(file_content)
+                        except json.JSONDecodeError:
+                            wcf.send_text("文件格式错误，请确保是有效的JSON文件", msg.roomid or msg.sender)
+                            return
+                            
+                        # 处理角色卡数据
+                        loop = asyncio.get_event_loop()
+                        success, message = loop.run_until_complete(
+                            character_manager.load_character(
+                                file_content,
+                                msg.sender,
+                                msg.roomid
+                            )
+                        )
+                        wcf.send_text(message, msg.roomid or msg.sender)
+                        
+                    except UnicodeDecodeError:
+                        wcf.send_text("文件编码错误，请确保使用UTF-8编码", msg.roomid or msg.sender)
+                    except Exception as e:
+                        logger.error(f"读取文件失败: {e}")
+                        wcf.send_text("读取文件失败，请重试", msg.roomid or msg.sender)
+                        
+                except ET.ParseError as e:
+                    logger.error(f"解析文件信息失败: {e}")
+                    wcf.send_text("无法解析文件信息，请重试", msg.roomid or msg.sender)
+                    
+            except Exception as e:
+                logger.error(f"处理角色卡文件失败: {e}", exc_info=True)
+                wcf.send_text("处理文件失败，请重试", msg.roomid or msg.sender)
+            
+            finally:
+                # 无论成功与否，都清除等待状态
+                handler = CommandHandler(config)
+                if msg.sender in handler.waiting_for_character_file:
+                    del handler.waiting_for_character_file[msg.sender]
+                
+            return
+                
     except Exception as e:
         logger.error(f"处理消息时出错: {e}", exc_info=True)
+
+def ensure_character_dir() -> str:
+    """确保角色卡数据目录存在，返回目录路径"""
+    import os
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    char_dir = os.path.join(current_dir, 'data', 'characters')
+    os.makedirs(char_dir, exist_ok=True)
+    return char_dir
+
+def wait_for_file(file_path: str, max_retries: int = 20, delay: float = 0.5) -> bool:
+    """等待文件下载完成"""
+    import time
+    import os
+    
+    for i in range(max_retries):
+        if os.path.exists(file_path):
+            try:
+                # 尝试打开文件，确保文件已完全写入
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    f.read(1)  # 尝试读取一个字符
+                time.sleep(0.5)  # 额外等待以确保文件完全写入
+                return True
+            except:
+                pass  # 如果文件无法打开，继续等待
+        logger.debug(f"等待文件下载，尝试 {i+1}/{max_retries}")
+        time.sleep(delay)
+    return False
         
