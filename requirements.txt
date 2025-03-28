@@ -6,7 +6,10 @@ requests>=2.32.3
 
 # AI和天气服务
 dashscope>=1.20.14     # 通义千问API
-aiohttp>=3.11.10       # 异步HTTP客户端端
+aiohttp>=3.11.10       # 异步HTTP客户端
+
+# 系统和监控
+psutil>=5.9.6         # 系统资源监控
 
 # 日志和工具
 python-logging>=0.4.9.6

@@ -808,6 +808,9 @@ class CharacterManager:
 📖 .char history [角色名] - 显示角色卡操作历史
 ⚠️ .char force release <角色名> - 强制释放被占用的角色（管理员）
 
+📝 技能检定命令：
+🎯 .c <技能名> - 进行技能检定（需先使用角色）
+
 📈 技能成长命令：
 🎲 .grow <技能名> [次数] - 进行技能成长检定，可指定次数
 📝 .grow history [角色名] [显示条数] - 显示角色成长历史

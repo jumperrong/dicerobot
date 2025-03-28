@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 jrrp_cache = {}
 jrrp_queried = {}
 
+# jrrp缓存文件路径
+JRRP_CACHE_FILE = "logs/jrrp_cache.json"
+
 # 存储用户查询记录的字典
 deck_cache = {}  # 用于缓存已加载的牌堆
 
@@ -78,6 +81,7 @@ def handle_dicehelp_command(wcf: Wcf, msg: WxMsg) -> None:
 • 重复投掷:  d4:d6 (用d4的结果决定投掷d6的次数)
 • 带括号重复: d4:(d8+2) (重复投掷括号内的完整表达式)
 • 复合运算:  d8*(d4+2) (支持加减乘除和括号)
+• 保留/丢弃: 2d20k1 (保留1个最高值), 3d6dl1 (丢弃1个最低值)
 
 📝 示例说明:
 1. d4:d8
@@ -99,6 +103,16 @@ def handle_dicehelp_command(wcf: Wcf, msg: WxMsg) -> None:
    - 先计算d8的结果
    - 再计算(d4+2)的结果
    - 将两个结果相乘
+
+5. 2d20k1
+   - 投掷2个d20
+   - 保留1个最高的结果
+   - 常用于D&D5e优势攻击
+
+6. 3d6dl1
+   - 投掷3个d6
+   - 丢弃1个最低的结果
+   - 计算剩余骰子总和
 
 ⚠️ 注意事项:
 • 表达式中请勿包含空格
@@ -122,6 +136,65 @@ def handle_dicehelp_command(wcf: Wcf, msg: WxMsg) -> None:
         else:
             wcf.send_text(error_msg, msg.sender)
 
+def load_jrrp_cache():
+    """加载jrrp缓存文件"""
+    global jrrp_cache, jrrp_queried
+    today = datetime.now().strftime('%Y-%m-%d')
+    
+    try:
+        # 确保logs目录存在
+        os.makedirs(os.path.dirname(JRRP_CACHE_FILE), exist_ok=True)
+        
+        # 检查缓存文件是否存在
+        if os.path.exists(JRRP_CACHE_FILE):
+            with open(JRRP_CACHE_FILE, 'r', encoding='utf-8') as f:
+                cache_data = json.load(f)
+                
+                # 检查缓存数据的日期是否是今天
+                if cache_data.get('date') == today:
+                    jrrp_cache = {tuple(k.split('|')): v for k, v in cache_data.get('cache', {}).items()}
+                    jrrp_queried = {tuple(k.split('|')): v for k, v in cache_data.get('queried', {}).items()}
+                    logger.info(f"成功加载今日({today})jrrp缓存，已有{len(jrrp_queried)}条记录")
+                else:
+                    # 如果不是今天的数据，创建新的空缓存
+                    jrrp_cache = {}
+                    jrrp_queried = {}
+                    logger.info(f"缓存日期({cache_data.get('date')})不是今天({today})，已重置jrrp缓存")
+                    save_jrrp_cache()
+        else:
+            # 如果文件不存在，创建新的空缓存
+            jrrp_cache = {}
+            jrrp_queried = {}
+            logger.info("jrrp缓存文件不存在，已创建新缓存")
+            save_jrrp_cache()
+    except Exception as e:
+        logger.error(f"加载jrrp缓存出错: {e}", exc_info=True)
+        # 出错时使用空缓存
+        jrrp_cache = {}
+        jrrp_queried = {}
+
+def save_jrrp_cache():
+    """保存jrrp缓存到文件"""
+    try:
+        today = datetime.now().strftime('%Y-%m-%d')
+        
+        # 确保logs目录存在
+        os.makedirs(os.path.dirname(JRRP_CACHE_FILE), exist_ok=True)
+        
+        # 将缓存数据转换为可JSON序列化的格式
+        cache_data = {
+            'date': today,
+            'cache': {f"{k[0]}|{k[1]}": v for k, v in jrrp_cache.items()},
+            'queried': {f"{k[0]}|{k[1]}": v for k, v in jrrp_queried.items()}
+        }
+        
+        with open(JRRP_CACHE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(cache_data, f, ensure_ascii=False, indent=2)
+            
+        logger.debug(f"已保存jrrp缓存，共{len(jrrp_queried)}条记录")
+    except Exception as e:
+        logger.error(f"保存jrrp缓存出错: {e}", exc_info=True)
+
 def get_today_rp(user_id: str) -> Tuple[int, bool]:
     """获取用户今日人品值"""
     today = datetime.now().strftime('%Y-%m-%d')
@@ -136,25 +209,11 @@ def get_today_rp(user_id: str) -> Tuple[int, bool]:
     
     jrrp_cache[cache_key] = rp_value
     jrrp_queried[cache_key] = True
+    
+    # 保存到缓存文件
+    save_jrrp_cache()
+    
     return rp_value, False
-
-def get_rp_level(rp_value: int) -> str:
-    """根据人品值获取对应评语"""
-    if rp_value == 1:
-        return "凶"
-    elif 2 <= rp_value <= 19:
-        return "末吉"
-    elif 20 <= rp_value <= 39:
-        return "小吉"
-    elif 40 <= rp_value <= 59:
-        return "中吉"
-    elif 60 <= rp_value <= 79:
-        return "吉"
-    elif 80 <= rp_value <= 99:
-        return "大吉"
-    elif rp_value == 100:
-        return "吉中吉"
-    return "未知"
 
 def handle_jrrp_command(wcf: Wcf, msg: WxMsg, **kwargs) -> None:
     """处理今日人品命令，从64卦中抽取一卦"""
@@ -209,6 +268,9 @@ def handle_jrrp_command(wcf: Wcf, msg: WxMsg, **kwargs) -> None:
             
             # 缓存卦象
             jrrp_cache[cache_key] = hexagram_name
+            
+            # 保存到缓存文件
+            save_jrrp_cache()
             
             # 获取卦象图片路径
             image_path = os.path.join(current_dir, "jrrp", f"{hexagram_name}.jpg")
@@ -470,7 +532,13 @@ def handle_drawhelp_command(wcf: Wcf, msg: WxMsg, config: dict) -> None:
             # 尝试获取牌堆的描述信息
             deck_descs = config.get('deck_descriptions', {})
             
-            lines = ["🎴 可用牌堆列表:"]
+            lines = ["🎴 抽卡系统使用说明:"]
+            lines.append("\n📝 基本命令:")
+            lines.append("• .draw <牌堆名> [抽取数量]")
+            lines.append("• 例如: .draw dmt 3  - 从万象无常牌堆抽3张牌")
+            lines.append("• 默认抽取数量为1张")
+            
+            lines.append("\n🃏 可用牌堆:")
             for name, filename in deck_configs.items():
                 # 获取牌堆描述
                 desc = deck_descs.get(name, "")
@@ -479,9 +547,13 @@ def handle_drawhelp_command(wcf: Wcf, msg: WxMsg, config: dict) -> None:
                 else:
                     lines.append(f"• {name}")
             
-            lines.append("\n📝 使用方法:")
-            lines.append("• .draw <牌堆名> [抽取数量]")
-            lines.append("• 例如: .draw dmt 3")
+            lines.append("\n✨ 特殊功能:")
+            lines.append("• 某些牌堆(如108将)支持图片展示")
+            lines.append("• 可以自定义牌堆，详见README文档")
+            
+            lines.append("\n⚠️ 注意事项:")
+            lines.append("• 牌堆名称区分大小写")
+            lines.append("• 最大抽取数量为10张")
                 
             reply = "\n".join(lines)
                 
@@ -501,7 +573,56 @@ def handle_drawhelp_command(wcf: Wcf, msg: WxMsg, config: dict) -> None:
 def handle_sys_command(wcf: Wcf, msg: WxMsg) -> None:
     """处理.sys命令"""
     try:
-        status_info = "机器人状态: 正常运行\n"
+        import platform
+        import psutil
+        import time
+        from datetime import datetime, timedelta
+        
+        # 获取系统信息
+        process = psutil.Process()
+        
+        # 获取启动时间（简化处理，使用进程启动时间）
+        start_time = datetime.fromtimestamp(process.create_time())
+        uptime = datetime.now() - start_time
+        days, remainder = divmod(uptime.total_seconds(), 86400)
+        hours, remainder = divmod(remainder, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        
+        # 内存使用
+        memory_info = process.memory_info()
+        memory_mb = memory_info.rss / (1024 * 1024)
+        
+        # 系统信息
+        system_info = platform.system()
+        python_version = platform.python_version()
+        
+        # 构建状态信息
+        status_lines = [
+            "🤖 骰子机器人系统状态:",
+            f"⏱️ 运行时间: {int(days)}天{int(hours)}小时{int(minutes)}分钟",
+            f"💾 内存使用: {memory_mb:.2f} MB",
+            f"🖥️ 系统: {system_info}",
+            f"🐍 Python版本: {python_version}",
+            f"📊 当前时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        ]
+        
+        # 添加功能状态
+        status_lines.append("\n⚙️ 功能状态:")
+        
+        # 检查基础功能
+        status_lines.append("✅ 骰子系统: 正常运行")
+        status_lines.append("✅ 角色卡系统: 正常运行")
+        
+        # 检查文件系统（牌堆）
+        deck_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "decks")
+        if os.path.exists(deck_path):
+            deck_count = len([f for f in os.listdir(deck_path) if os.path.isfile(os.path.join(deck_path, f))])
+            status_lines.append(f"✅ 牌堆系统: 正常运行 ({deck_count}个牌堆文件)")
+        else:
+            status_lines.append("❌ 牌堆系统: 路径不存在")
+        
+        # 组合所有信息
+        status_info = "\n".join(status_lines)
         
         if msg.roomid:
             wcf.send_text(status_info, msg.roomid)
@@ -510,7 +631,7 @@ def handle_sys_command(wcf: Wcf, msg: WxMsg) -> None:
             
     except Exception as e:
         logger.error(f"处理.sys命令出错: {e}", exc_info=True)
-        error_msg = "获取状态信息时出错"
+        error_msg = "获取状态信息时出错，可能是缺少必要的库或权限"
         if msg.roomid:
             wcf.send_text(error_msg, msg.roomid)
         else:

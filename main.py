@@ -182,6 +182,11 @@ def main():
         if not dnd_data:
             logger.error(f"D&D数据加载失败或为空")
         
+        # 加载今日人品(jrrp)缓存
+        from functions import load_jrrp_cache
+        load_jrrp_cache()
+        logger.info("已加载jrrp缓存")
+        
         # 启用消息接收
         wcf.enable_receiving_msg()
         
