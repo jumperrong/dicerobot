@@ -4,7 +4,6 @@ logs/
 *.pyc
 *.pyo
 *.pyd
-*.db
 *.sqlite3
 venv/
 .env
