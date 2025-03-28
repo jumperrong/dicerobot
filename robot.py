@@ -234,14 +234,22 @@ class CommandHandler:
 • .draw [牌堆]  - 从指定牌堆抽卡
 • .weather     - 查看天气信息
 
+角色卡指令:
+• .char        - 角色卡管理 (.char help 查看详细用法)
+• .c [技能名]   - 进行技能检定
+• .grow [技能名] - 进行技能成长
+• .grow history - 查看成长历史
+
 管理员指令:
 • .ai room on/off    - 开启/关闭当前群聊的AI功能
+• .setgrow [角色名] [点数] - 设置角色成长点数
 • .sys               - 查看机器人运行状态
 
 详细说明:
 • .dicehelp  - 显示骰子指令详细说明
 • .drawhelp  - 显示抽卡指令详细说明
-• .adminhelp - 显示管理员指令详细说明"""
+• .adminhelp - 显示管理员指令详细说明
+• .char help - 显示角色卡指令详细说明"""
 
         self._send_message(wcf, msg, help_text)
     
@@ -526,47 +534,77 @@ AI功能控制:
                 self._send_message(wcf, msg, info)
                 return
                 
-            elif subcmd == "force-release":
+            elif subcmd == "force-release" or (subcmd == "force" and len(parts) > 1 and parts[1].lower() == "release"):
                 # 检查是否是管理员
                 if not self.qwen.is_admin(msg.sender):
                     self._send_message(wcf, msg, "只有管理员可以使用此命令")
                     return
-                    
-                if len(parts) < 2:
-                    self._send_message(wcf, msg, "请指定要释放的角色名称")
-                    return
-                    
-                char_name = ' '.join(parts[1:])
-                success, message = character_manager.force_release_character(char_name)
+                
+                # 处理两种不同的命令格式: `.char force-release 角色名` 或 `.char force release 角色名`
+                if subcmd == "force-release":
+                    if len(parts) < 2:
+                        self._send_message(wcf, msg, "请指定要释放的角色名称")
+                        return
+                    char_name = ' '.join(parts[1:])
+                else:  # force release
+                    if len(parts) < 3:
+                        self._send_message(wcf, msg, "请指定要释放的角色名称")
+                        return
+                    char_name = ' '.join(parts[2:])
+                
+                success, message = await character_manager.force_release_character(char_name)
+                
+                # 记录强制释放操作的历史记录
+                if success:
+                    character_manager.record_operation(char_name, msg.sender, "force_release")
+                
                 self._send_message(wcf, msg, message)
                 return
                 
             elif subcmd == "history":
-                if len(parts) < 2:
-                    char_name = character_manager.get_current_character(msg.sender, msg.roomid)
-                    if not char_name:
-                        self._send_message(wcf, msg, "请指定角色名称，或使用 .char use 设置当前角色")
-                        return
-                else:
-                    char_name = ' '.join(parts[1:])
-                
-                info = character_manager.show_character_history(char_name)
-                self._send_message(wcf, msg, info)
-                return
+                # 处理角色卡操作历史查询
+                try:
+                    # 处理可能的限制参数
+                    limit = 20  # 默认显示20条记录
+                    
+                    # 检查参数中是否包含数字作为limit
+                    char_name_parts = []
+                    for part in parts[1:]:
+                        if part.isdigit():
+                            limit = int(part)
+                        else:
+                            char_name_parts.append(part)
+                    
+                    # 确定角色名
+                    if not char_name_parts:
+                        char_name = character_manager.get_current_character(msg.sender, msg.roomid)
+                        if not char_name:
+                            self._send_message(wcf, msg, "请指定角色名称，或使用 .char use 设置当前角色")
+                            return
+                    else:
+                        char_name = ' '.join(char_name_parts)
+                    
+                    # 获取并显示操作历史记录
+                    history = character_manager.show_character_history(char_name)
+                    self._send_message(wcf, msg, history)
+                    return
+                except ValueError:
+                    self._send_message(wcf, msg, "参数格式错误，请使用：.char history [角色名]")
+                    return
                 
             elif subcmd == "help":
                 help_text = """🎭 角色卡管理命令：
-• .char load - 上传角色卡文件
-• .char list - 显示所有可用角色卡
-• .char info [角色名] - 显示角色卡基本信息
-• .char use <角色名> - 设置当前使用的角色
-• .char release - 释放当前使用的角色
-• .char status - 显示所有角色卡的使用状态
-• .char history [角色名] - 显示角色卡操作历史
-• .char force-release <角色名> - [管理员] 强制释放角色卡
-• .char help - 显示本帮助信息
+📥 .char load - 上传角色卡文件
+📋 .char list - 显示所有可用角色卡
+📊 .char info [角色名] - 显示角色卡基本信息
+👤 .char use <角色名> - 设置当前使用的角色
+🔄 .char release - 释放当前使用的角色
+👥 .char status - 显示所有角色卡的使用状态
+📖 .char history [角色名] - 显示角色卡操作历史
+⚠️ .char force release <角色名> - [管理员] 强制释放角色卡
+📜 .char help - 显示本帮助信息
 
-注意：
+⚠️ 注意事项：
 1. 一个角色卡同时只能被一个用户使用
 2. 使用角色卡后，可以省略角色名称
 3. 使用 .char release 释放当前使用的角色
@@ -613,17 +651,34 @@ AI功能控制:
             
             if parts[0].lower() == "history":
                 # 处理成长历史查询
-                if len(parts) < 2:
-                    char_name = character_manager.get_current_character(msg.sender, msg.roomid)
-                    if not char_name:
-                        self._send_message(wcf, msg, "请指定角色名称，或使用 .char use 设置当前角色")
-                        return
-                else:
-                    char_name = ' '.join(parts[1:])
-                
-                history = character_manager.show_growth_history(char_name)
-                self._send_message(wcf, msg, history)
-                return
+                try:
+                    # 处理可能的限制参数
+                    limit = 20  # 默认显示20条记录
+                    
+                    # 检查参数中是否包含数字作为limit
+                    char_name_parts = []
+                    for part in parts[1:]:
+                        if part.isdigit():
+                            limit = int(part)
+                        else:
+                            char_name_parts.append(part)
+                    
+                    # 确定角色名
+                    if not char_name_parts:
+                        char_name = character_manager.get_current_character(msg.sender, msg.roomid)
+                        if not char_name:
+                            self._send_message(wcf, msg, "请指定角色名称，或使用 .char use 设置当前角色")
+                            return
+                    else:
+                        char_name = ' '.join(char_name_parts)
+                    
+                    # 获取并显示历史记录
+                    history = character_manager.show_growth_history(char_name, limit=limit)
+                    self._send_message(wcf, msg, history)
+                    return
+                except ValueError:
+                    self._send_message(wcf, msg, "参数格式错误，请使用：.grow history [角色名] [显示条数]")
+                    return
             
             skill_name = ' '.join(parts)
             success, message = character_manager.grow_skill(msg.sender, msg.roomid, skill_name)
@@ -653,11 +708,30 @@ AI功能控制:
                 self._send_message(wcf, msg, "成长次数必须是数字")
                 return
             
-            if points < 0:
-                self._send_message(wcf, msg, "成长次数不能为负数")
-                return
+            # 获取当前成长点数
+            current_points = character_manager.db.get_growth_points(char_name)
             
+            # 调用数据库设置成长点数
             success, message = character_manager.db.set_growth_points(char_name, points)
+            
+            # 记录成长历史
+            if success:
+                logger.debug(f"记录成长点数变更: {char_name}, {current_points} -> {points}, 用户: {msg.sender}")
+                character_manager.record_growth_points_change(
+                    char_name=char_name,
+                    user_id=msg.sender,
+                    old_value=str(current_points),
+                    new_value=str(points)
+                )
+                logger.debug(f"成长点数变更记录完成")
+                
+                # 生成更友好的消息，明确表示增减
+                if points > current_points:
+                    message = f"已增加角色「{char_name}」的成长次数：{current_points} → {points} (+{points-current_points})"
+                elif points < current_points:
+                    message = f"已减少角色「{char_name}」的成长次数：{current_points} → {points} ({points-current_points})"
+                # 如果相等，使用原始消息
+                
             self._send_message(wcf, msg, message)
             
         except Exception as e:

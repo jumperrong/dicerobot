@@ -51,9 +51,9 @@ class Database:
             gender TEXT,
             residence TEXT,
             birthplace TEXT,
-            era TEXT,                    -- 新增：时代
-            is_partner BOOLEAN,          -- 新增：是否为搭档
-            growth_points INTEGER DEFAULT 0,  -- 成长点数字段
+            era TEXT,                    
+            is_partner BOOLEAN,          
+            growth_points INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         ''')
@@ -149,58 +149,56 @@ class Database:
         CREATE TABLE IF NOT EXISTS character_usage (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id TEXT NOT NULL,
-            room_id TEXT,
             character_id INTEGER NOT NULL,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (character_id) REFERENCES characters(id)
         )
         ''')
 
-        # 检查 character_history 表是否存在
+        # 角色操作历史表
         cursor.execute('''
-        SELECT name FROM sqlite_master 
-        WHERE type='table' AND name='character_history'
+        CREATE TABLE IF NOT EXISTS character_operation_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            character_name TEXT NOT NULL,
+            user_id TEXT NOT NULL,
+            action TEXT NOT NULL,  -- create, use, release, overwrite
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
         ''')
         
-        if cursor.fetchone():
-            # 如果表存在，检查是否有 points_used 字段
-            cursor.execute('PRAGMA table_info(character_history)')
-            columns = [column[1] for column in cursor.fetchall()]
-            
-            if 'points_used' not in columns:
-                # 添加 points_used 字段
-                cursor.execute('''
-                ALTER TABLE character_history 
-                ADD COLUMN points_used INTEGER
-                ''')
-                logger.info("已添加 points_used 字段到 character_history 表")
-        else:
-            # 如果表不存在，创建新表
-            cursor.execute('''
-            CREATE TABLE character_history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                character_id INTEGER NOT NULL,
-                user_id TEXT NOT NULL,
-                room_id TEXT,
-                action TEXT NOT NULL,
-                field_name TEXT NOT NULL,
-                old_value TEXT,
-                new_value TEXT,
-                points_used INTEGER,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (character_id) REFERENCES characters(id)
-            )
-            ''')
+        # 角色成长历史表
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS character_growth_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            character_name TEXT NOT NULL,
+            user_id TEXT NOT NULL,
+            action TEXT NOT NULL,  -- grow, setgrow
+            field_name TEXT NOT NULL,  -- 技能名或 growth_points
+            old_value TEXT,
+            new_value TEXT,
+            points_used INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        ''')
 
         # 创建索引
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_char_name ON characters(char_name)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_skills_char ON character_skills(character_id)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_attrs_char ON character_attributes(character_id)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_status_char ON character_status(character_id)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_items_char ON character_items(character_id)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_weapons_char ON character_weapons(character_id)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_notes_char ON character_notes(character_id)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_history_char ON character_history(character_id)')
+        # 创建角色操作历史索引
+        cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_op_history_char_name 
+        ON character_operation_history(character_name)
+        ''')
+        
+        # 创建角色成长历史索引
+        cursor.execute('''
+        CREATE INDEX IF NOT EXISTS idx_growth_history_char_name 
+        ON character_growth_history(character_name)
+        ''')
+        
+        # 删除不再使用的character_history表
+        cursor.execute('''
+        DROP TABLE IF EXISTS character_history
+        ''')
+        logger.info("已删除不再使用的character_history表")
         
         self.connection.commit()
     
@@ -242,10 +240,39 @@ class Database:
         try:
             cursor = self.connection.cursor()
             
+            # 开始事务
+            cursor.execute('BEGIN')
+            logger.debug(f"开始保存角色数据: {char_data.get('basic', {}).get('characterName')}")
+            
+            # 获取角色名称
+            char_name = char_data.get('basic', {}).get('characterName')
+            
+            # 检查是否存在同名角色
+            cursor.execute('SELECT id FROM characters WHERE char_name = ?', (char_name,))
+            old_char_ids = [row[0] for row in cursor.fetchall()]
+            
+            # 获取旧数据（如果存在）
+            old_data = None
+            if old_char_ids:
+                old_data = self.get_character_info(char_name)
+            
+            # 先删除该角色名称的所有相关数据
+            for old_id in old_char_ids:
+                logger.debug(f"删除角色ID {old_id} 的所有相关数据")
+                cursor.execute('DELETE FROM character_attributes WHERE character_id = ?', (old_id,))
+                cursor.execute('DELETE FROM character_status WHERE character_id = ?', (old_id,))
+                cursor.execute('DELETE FROM character_skills WHERE character_id = ?', (old_id,))
+                cursor.execute('DELETE FROM character_items WHERE character_id = ?', (old_id,))
+                cursor.execute('DELETE FROM character_weapons WHERE character_id = ?', (old_id,))
+                cursor.execute('DELETE FROM character_notes WHERE character_id = ?', (old_id,))
+            
+            cursor.execute('DELETE FROM characters WHERE char_name = ?', (char_name,))
+            logger.debug(f"已删除角色「{char_name}」的所有旧数据")
+            
             # 1. 保存基本信息
             basic = char_data.get('basic', {})
             cursor.execute('''
-            INSERT OR REPLACE INTO characters (
+            INSERT INTO characters (
                 char_name, player_name, occupation, age, gender, 
                 residence, birthplace, era, is_partner
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -261,10 +288,13 @@ class Database:
                 basic.get('isPartner', False)
             ))
             
+            # 获取新插入的角色ID
             character_id = cursor.lastrowid
+            logger.debug(f"保存基本信息完成，新角色ID: {character_id}")
             
-            # 保存属性值
+            # 2. 保存属性值
             if 'attributes' in char_data:
+                logger.debug("开始保存属性数据")
                 cursor.execute('DELETE FROM character_attributes WHERE character_id = ?', (character_id,))
                 attrs = char_data['attributes']
                 cursor.execute('''
@@ -287,9 +317,11 @@ class Database:
                     int(attrs.get('hp', '0')),
                     int(attrs.get('mp', '0'))
                 ))
+                logger.debug("属性数据保存完成")
             
-            # 2. 保存状态数据
+            # 3. 保存状态数据
             if 'status' in char_data:
+                logger.debug("开始保存状态数据")
                 cursor.execute('DELETE FROM character_status WHERE character_id = ?', (character_id,))
                 status = char_data['status']
                 for category, values in status.items():  # sanity, health, magic
@@ -299,49 +331,41 @@ class Database:
                             character_id, category, type, value
                         ) VALUES (?, ?, ?, ?)
                         ''', (character_id, category, type_, value))
+                logger.debug("状态数据保存完成")
             
-            # 3. 保存技能数据
+            # 4. 保存技能数据
             if 'skills' in char_data and 'skillsList' in char_data['skills']:
-                cursor.execute('DELETE FROM character_skills WHERE character_id = ? AND is_custom = 0', (character_id,))
+                logger.debug("开始保存技能数据")
+                # 删除该角色的所有技能记录（包括普通技能和自定义技能）
+                cursor.execute('DELETE FROM character_skills WHERE character_id = ?', (character_id,))
+                
+                # 保存普通技能
                 for skill in char_data['skills']['skillsList']:
                     if not skill.get('isSubSkill'):
-                        skill_name = skill['name']
+                        # 如果技能有子类型，使用 "技能:子类型" 格式保存
+                        if 'subtype' in skill and skill['subtype']:
+                            skill_name = f"{skill['name']}:{skill['subtype']}"
+                        else:
+                            skill_name = skill['name']
                         
-                        # 如果是格斗技能且有子类型，只保存子技能
-                        if skill_name == "格斗" and 'subtype' in skill:
-                            sub_skill_name = f"格斗:{skill['subtype']}"  # 使用 "格斗:斗殴" 格式
-                            cursor.execute('''
-                            INSERT INTO character_skills (
-                                character_id, skill_name, base, occupation, 
-                                interest, growth, is_custom
-                            ) VALUES (?, ?, ?, ?, ?, ?, 0)
-                            ''', (
-                                character_id,
-                                sub_skill_name,
-                                skill.get('base', '0'),
-                                skill.get('occupation', ''),
-                                skill.get('interest', ''),
-                                skill.get('growth', '')
-                            ))
-                        # 对于其他非格斗技能，正常保存
-                        elif skill_name != "格斗":  # 不保存格斗主技能
-                            cursor.execute('''
-                            INSERT INTO character_skills (
-                                character_id, skill_name, base, occupation, 
-                                interest, growth, is_custom
-                            ) VALUES (?, ?, ?, ?, ?, ?, 0)
-                            ''', (
-                                character_id,
-                                skill_name,
-                                skill.get('base', '0'),
-                                skill.get('occupation', ''),
-                                skill.get('interest', ''),
-                                skill.get('growth', '')
-                            ))
+                        cursor.execute('''
+                        INSERT INTO character_skills (
+                            character_id, skill_name, base, occupation, 
+                            interest, growth, is_custom
+                        ) VALUES (?, ?, ?, ?, ?, ?, 0)
+                        ''', (
+                            character_id,
+                            skill_name,
+                            skill.get('base', '0'),
+                            skill.get('occupation', ''),
+                            skill.get('interest', ''),
+                            skill.get('growth', '')
+                        ))
+                logger.debug("普通技能保存完成")
             
-            # 4. 保存自定义技能
+            # 5. 保存自定义技能
             if 'customSkills' in char_data:
-                cursor.execute('DELETE FROM character_skills WHERE character_id = ? AND is_custom = 1', (character_id,))
+                logger.debug("开始保存自定义技能")
                 for skill in char_data['customSkills']:
                     cursor.execute('''
                     INSERT INTO character_skills (
@@ -356,9 +380,11 @@ class Database:
                         skill.get('interest', ''),
                         skill.get('growth', '')
                     ))
+                logger.debug("自定义技能保存完成")
             
-            # 5. 保存物品数据
+            # 6. 保存物品数据
             if 'items' in char_data:
+                logger.debug("开始保存物品数据")
                 cursor.execute('DELETE FROM character_items WHERE character_id = ?', (character_id,))
                 for item in char_data['items']:
                     if item.get('name'):
@@ -372,9 +398,11 @@ class Database:
                             item.get('type', ''),
                             item.get('note', '')
                         ))
+                logger.debug("物品数据保存完成")
             
-            # 6. 保存武器数据
+            # 7. 保存武器数据
             if 'weapons' in char_data:
+                logger.debug("开始保存武器数据")
                 cursor.execute('DELETE FROM character_weapons WHERE character_id = ?', (character_id,))
                 for weapon in char_data['weapons']:
                     if weapon.get('name'):
@@ -388,9 +416,11 @@ class Database:
                             weapon.get('damage', ''),
                             weapon.get('features', '')
                         ))
+                logger.debug("武器数据保存完成")
             
-            # 7. 保存笔记数据
+            # 8. 保存笔记数据
             if 'notes' in char_data:
+                logger.debug("开始保存笔记数据")
                 cursor.execute('DELETE FROM character_notes WHERE character_id = ?', (character_id,))
                 for note in char_data['notes']:
                     cursor.execute('''
@@ -402,11 +432,16 @@ class Database:
                         note.get('name', ''),
                         note.get('note', '')
                     ))
+                logger.debug("笔记数据保存完成")
             
+            # 提交事务
             self.connection.commit()
+            logger.debug("所有数据保存完成，事务已提交")
             return True, f"角色「{basic.get('characterName')}」保存成功"
             
         except Exception as e:
+            # 发生错误时回滚事务
+            self.connection.rollback()
             logger.error(f"保存角色数据失败: {e}")
             return False, f"保存角色数据失败: {str(e)}"
     
@@ -591,186 +626,156 @@ class Database:
         
         return status
     
-    def get_character_history(self, char_name: str, history_type: str = 'all', limit: int = 50) -> list:
-        """获取角色卡的变更历史"""
+    def format_operation_history(self, history_records: list) -> str:
+        """格式化操作历史记录的展示"""
+        if not history_records:
+            return "暂无操作记录"
+        
+        formatted = []
+        for record in history_records:
+            created_at, user_id, action = record[0], record[1], record[2]
+            # 格式化时间
+            time_str = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M')
+            
+            # 格式化操作类型
+            action_desc = {
+                'create': '创建',
+                'use': '使用',
+                'release': '释放',
+                'overwrite': '覆盖'
+            }.get(action, action)
+            
+            formatted.append(f"{time_str} {user_id} {action_desc}")
+        
+        return "\n".join(formatted)
+
+    def format_growth_history(self, history_records: list) -> str:
+        """格式化成长历史记录的展示"""
+        if not history_records:
+            return "暂无成长记录"
+        
+        formatted = []
+        for record in history_records:
+            created_at, user_id, action, field_name, old_value, new_value, points_used = record
+            # 格式化时间
+            time_str = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M')
+            
+            # 格式化操作类型
+            if action == 'grow':
+                msg = f"{time_str} {user_id} 技能成长：{field_name} {old_value} → {new_value}"
+                if points_used:
+                    msg += f" (消耗成长点数: {points_used})"
+            elif action == 'setgrow':
+                msg = f"{time_str} {user_id} 设置成长点数：{old_value} → {new_value}"
+            else:
+                msg = f"{time_str} {user_id} {action}: {field_name} {old_value} → {new_value}"
+            
+            formatted.append(msg)
+        
+        return "\n".join(formatted)
+
+    def get_current_character(self, user_id: str) -> Optional[tuple[int, str]]:
+        """获取用户当前使用的角色"""
         try:
             cursor = self.connection.cursor()
-            
-            if history_type == 'grow':
-                # 只获取成长相关的历史（只获取技能成长记录）
-                cursor.execute('''
-                SELECT h.created_at, h.user_id, h.room_id, h.action, 
-                       h.field_name, h.old_value, h.new_value,
-                       h.points_used
-                FROM character_history h
-                JOIN characters c ON h.character_id = c.id
-                WHERE c.char_name = ? AND h.action = 'grow'
-                ORDER BY h.created_at DESC
-                LIMIT ?
-                ''', (char_name, limit))
-            elif history_type == 'setgrow':
-                # 获取成长点数调整记录
-                cursor.execute('''
-                SELECT h.created_at, h.user_id, h.room_id, h.action, 
-                       h.field_name, h.old_value, h.new_value,
-                       h.points_used
-                FROM character_history h
-                JOIN characters c ON h.character_id = c.id
-                WHERE c.char_name = ? AND h.action = 'setgrow'
-                ORDER BY h.created_at DESC
-                LIMIT ?
-                ''', (char_name, limit))
-            elif history_type == 'basic':
-                # 只获取基本操作历史（创建、使用、释放）
-                cursor.execute('''
-                SELECT h.created_at, h.user_id, h.room_id, h.action, 
-                       h.field_name, h.old_value, h.new_value,
-                       h.points_used
-                FROM character_history h
-                JOIN characters c ON h.character_id = c.id
-                WHERE c.char_name = ? AND h.action IN ('create', 'use', 'release')
-                ORDER BY h.created_at DESC
-                LIMIT ?
-                ''', (char_name, limit))
-            else:
-                # 获取所有历史
-                cursor.execute('''
-                SELECT h.created_at, h.user_id, h.room_id, h.action, 
-                       h.field_name, h.old_value, h.new_value,
-                       h.points_used
-                FROM character_history h
-                JOIN characters c ON h.character_id = c.id
-                WHERE c.char_name = ?
-                ORDER BY h.created_at DESC
-                LIMIT ?
-                ''', (char_name, limit))
-            
-            return cursor.fetchall()
-            
+            cursor.execute('''
+            SELECT c.id, c.char_name 
+            FROM characters c
+            JOIN character_usage u ON c.id = u.character_id
+            WHERE u.user_id = ?
+            ORDER BY u.updated_at DESC
+            LIMIT 1
+            ''', (user_id,))
+            return cursor.fetchone()
         except Exception as e:
-            logger.error(f"获取角色卡历史失败: {e}")
-            return []
-    
-    def use_character(self, user_id: str, room_id: Optional[str], char_name: str) -> tuple[bool, str]:
+            logger.error(f"获取当前角色失败: {e}")
+            return None
+
+    def use_character(self, user_id: str, char_name: str) -> tuple[bool, str]:
         """使用角色"""
         try:
             cursor = self.connection.cursor()
             cursor.execute('BEGIN')
             
-            # 1. 检查角色是否存在
-            cursor.execute('SELECT id, char_name FROM characters WHERE char_name = ?', (char_name,))
-            char_result = cursor.fetchone()
-            if not char_result:
+            # 获取角色ID
+            cursor.execute('SELECT id FROM characters WHERE char_name = ?', (char_name,))
+            result = cursor.fetchone()
+            if not result:
                 self.connection.rollback()
-                return False, f"未找到角色「{char_name}」"
+                return False, f"未找到角色: {char_name}"
             
-            character_id, char_name = char_result
+            character_id = result[0]
             
-            # 2. 检查角色是否已被使用
+            # 更新使用记录
             cursor.execute('''
-                SELECT c.char_name, u.user_id 
-                FROM character_usage u
-                JOIN characters c ON u.character_id = c.id
-                WHERE c.id = ?
-            ''', (character_id,))
-            usage = cursor.fetchone()
-            if usage and usage[1] != user_id:
-                self.connection.rollback()
-                return False, f"角色「{char_name}」已被其他用户使用"
-            
-            # 3. 检查用户是否已在使用其他角色
-            cursor.execute('''
-                SELECT c.char_name 
-                FROM character_usage u
-                JOIN characters c ON u.character_id = c.id
-                WHERE u.user_id = ? AND (u.room_id IS ? OR u.room_id = ?)
-            ''', (user_id, room_id, room_id))
-            current_usage = cursor.fetchone()
-            if current_usage:
-                self.connection.rollback()
-                return False, f"你当前正在使用角色「{current_usage[0]}」，请先释放当前角色"
-            
-            # 4. 添加新的使用记录
-            cursor.execute('''
-                INSERT OR REPLACE INTO character_usage (character_id, user_id, room_id)
-                VALUES (?, ?, ?)
-            ''', (character_id, user_id, room_id))
-            
-            # 5. 添加历史记录
-            cursor.execute('''
-                INSERT INTO character_history (
-                    character_id, user_id, room_id, action, 
-                    field_name, old_value, new_value, created_at
-                ) VALUES (?, ?, ?, 'use', '', '', '', CURRENT_TIMESTAMP)
-            ''', (character_id, user_id, room_id))
+            INSERT OR REPLACE INTO character_usage 
+            (user_id, character_id, updated_at)
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+            ''', (user_id, character_id))
             
             self.connection.commit()
             return True, f"已切换到角色「{char_name}」"
-            
         except Exception as e:
             self.connection.rollback()
             logger.error(f"使用角色失败: {e}")
-            return False, "使用角色失败，请重试"
-    
-    def release_character(self, user_id: str, room_id: Optional[str]) -> tuple[bool, str]:
+            return False, "使用角色失败"
+
+    def release_character(self, user_id: str) -> tuple[bool, str]:
         """释放用户当前使用的角色"""
         try:
             cursor = self.connection.cursor()
-            
-            # 开始事务
             cursor.execute('BEGIN')
             
-            # 获取当前使用的角色
-            cursor.execute('''
-            SELECT c.id, c.char_name 
-            FROM character_usage u
-            JOIN characters c ON u.character_id = c.id
-            WHERE u.user_id = ? AND (u.room_id IS ? OR u.room_id = ?)
-            ''', (user_id, room_id, room_id))
-            result = cursor.fetchone()
-            
-            if not result:
+            # 获取当前角色
+            current = self.get_current_character(user_id)
+            if not current:
                 self.connection.rollback()
-                return False, "当前没有使用任何角色"
+                return False, "当前未使用任何角色"
             
-            character_id, char_name = result
+            char_id, char_name = current
             
             # 删除使用记录
             cursor.execute('''
             DELETE FROM character_usage 
-            WHERE user_id = ? AND (room_id IS ? OR room_id = ?)
-            ''', (user_id, room_id, room_id))
-            
-            # 添加历史记录
-            cursor.execute('''
-            INSERT INTO character_history (
-                character_id, user_id, room_id, action, 
-                field_name, old_value, new_value, created_at
-            ) VALUES (?, ?, ?, 'release', '', '', '', CURRENT_TIMESTAMP)
-            ''', (character_id, user_id, room_id))
+            WHERE user_id = ? AND character_id = ?
+            ''', (user_id, char_id))
             
             self.connection.commit()
             return True, f"已释放角色「{char_name}」"
-            
         except Exception as e:
             self.connection.rollback()
             logger.error(f"释放角色失败: {e}")
             return False, "释放角色失败"
-    
+
+    def get_character_users(self, char_name: str) -> list:
+        """获取正在使用该角色的用户列表"""
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute('''
+            SELECT u.user_id
+            FROM character_usage u
+            JOIN characters c ON u.character_id = c.id
+            WHERE c.char_name = ?
+            ''', (char_name,))
+            return [row[0] for row in cursor.fetchall()]
+        except Exception as e:
+            logger.error(f"获取角色使用者失败: {e}")
+            return []
+
     def get_active_character(self, user_id: str, room_id: Optional[str]) -> Optional[str]:
         """获取用户当前使用的角色名称"""
         try:
             cursor = self.connection.cursor()
             
-            # 修改查询语句，通过 JOIN 获取角色名称
+            # 修改查询语句，移除 room_id 相关条件
             cursor.execute('''
             SELECT c.char_name
             FROM character_usage u
             JOIN characters c ON u.character_id = c.id
-            WHERE u.user_id = ? AND (u.room_id IS ? OR u.room_id = ?)
+            WHERE u.user_id = ?
             ORDER BY u.updated_at DESC
             LIMIT 1
-            ''', (user_id, room_id, room_id))
+            ''', (user_id,))
             
             result = cursor.fetchone()
             return result[0] if result else None
@@ -779,13 +784,13 @@ class Database:
             logger.error(f"获取当前角色失败: {e}")
             return None
 
-    def get_all_character_usage(self) -> List[Tuple[str, str, str, str]]:
+    def get_all_character_usage(self) -> List[Tuple[str, str, str]]:
         """获取所有角色卡的使用状态"""
         cursor = self.connection.cursor()
         cursor.execute('''
-        SELECT u.char_name, u.user_id, u.room_id, u.updated_at
+        SELECT c.char_name, u.user_id, u.updated_at
         FROM character_usage u
-        JOIN characters c ON u.char_name = c.char_name
+        JOIN characters c ON u.character_id = c.id
         ORDER BY u.updated_at DESC
         ''')
         return cursor.fetchall()
@@ -794,8 +799,19 @@ class Database:
         """强制释放角色卡（管理员功能）"""
         try:
             cursor = self.connection.cursor()
-            cursor.execute('DELETE FROM character_usage WHERE char_name = ?', (char_name,))
+            
+            # 首先查找角色ID
+            cursor.execute('SELECT id FROM characters WHERE char_name = ?', (char_name,))
+            result = cursor.fetchone()
+            if not result:
+                return False, f"未找到角色: {char_name}"
+            
+            character_id = result[0]
+            
+            # 删除该角色的所有使用记录
+            cursor.execute('DELETE FROM character_usage WHERE character_id = ?', (character_id,))
             self.connection.commit()
+            
             if cursor.rowcount > 0:
                 return True, f"已强制释放角色「{char_name}」"
             return False, f"角色「{char_name}」当前未被使用"
@@ -803,25 +819,36 @@ class Database:
             logger.error(f"强制释放角色失败: {e}")
             return False, "强制释放角色失败"
 
-    def get_character_with_usage(self) -> List[dict]:
+    def get_character_with_usage(self) -> List[Dict[str, Any]]:
         """获取所有角色卡及其使用状态"""
-        cursor = self.connection.cursor()
-        cursor.execute('''
-        SELECT c.char_name, c.player_name, c.occupation,
-               u.user_id, u.room_id, u.updated_at
-        FROM characters c
-        LEFT JOIN character_usage u ON c.char_name = u.char_name
-        ORDER BY c.char_name
-        ''')
-        result = cursor.fetchall()
-        return [{
-            'char_name': row[0],
-            'player_name': row[1],
-            'occupation': row[2],
-            'used_by': row[3],
-            'room_id': row[4],
-            'used_since': row[5]
-        } for row in result]
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT 
+                        c.char_name,
+                        c.player_name,
+                        c.occupation,
+                        u.user_id as used_by,
+                        u.updated_at
+                    FROM characters c
+                    LEFT JOIN character_usage u ON c.id = u.character_id
+                    ORDER BY c.char_name
+                """)
+                rows = cursor.fetchall()
+                
+                # 将结果转换为字典列表，移除 room_id
+                return [{
+                    'char_name': row[0],
+                    'player_name': row[1],
+                    'occupation': row[2],
+                    'used_by': row[3],
+                    'updated_at': row[4]
+                } for row in rows]
+                
+        except Exception as e:
+            logger.error(f"获取角色列表失败: {e}")
+            return []
 
     def get_character_skills(self, char_name: str) -> tuple[Optional[dict], str]:
         """获取角色的所有技能值"""
@@ -839,6 +866,7 @@ class Database:
                 return None, f"未找到角色「{char_name}」"
             
             character_id = character[0]
+            logger.debug(f"获取角色技能: {char_name} (ID: {character_id})")
             
             # 获取所有技能（包括普通技能和自定义技能）
             cursor.execute('''
@@ -849,6 +877,7 @@ class Database:
             ''', (character_id,))
             
             skills = cursor.fetchall()
+            logger.debug(f"找到 {len(skills)} 个技能")
             
             # 构造返回数据
             result = {
@@ -859,9 +888,12 @@ class Database:
             # 处理普通技能
             for skill in skills:
                 skill_name, base, occupation, interest, growth, is_custom = skill
+                logger.debug(f"处理技能: {skill_name} (base={base}, occupation={occupation}, interest={interest}, growth={growth}, is_custom={is_custom})")
+                
                 # 检查是否是带子类型的技能
                 if ':' in skill_name:
                     parent_skill, subtype = skill_name.split(':', 1)
+                    logger.debug(f"拆分技能名: {parent_skill} -> {subtype}")
                     skill_data = {
                         'name': parent_skill,
                         'base': str(base) if base is not None else '0',
@@ -886,6 +918,7 @@ class Database:
                 else:
                     result['skillsList'].append(skill_data)
             
+            logger.debug(f"普通技能: {len(result['skillsList'])}个, 自定义技能: {len(result['customSkills'])}个")
             return result, ""
             
         except Exception as e:
@@ -935,16 +968,7 @@ class Database:
             WHERE char_name = ?
             ''', (points, char_name))
             
-            # 记录变更历史
-            cursor.execute('''
-            INSERT INTO character_history (
-                character_id, user_id, room_id, action, 
-                field_name, old_value, new_value, created_at
-            ) VALUES (
-                (SELECT id FROM characters WHERE char_name = ?),
-                ?, NULL, 'setgrow', 'growth_points', ?, ?, CURRENT_TIMESTAMP
-            )
-            ''', (char_name, "系统", str(current_points), str(points)))
+            # 移除这里的变更历史记录，由CharacterManager负责
             
             self.connection.commit()
             return True, f"已设置角色「{char_name}」的成长次数为 {points}"
@@ -988,93 +1012,123 @@ class Database:
             logger.error(f"使用技能成长次数失败: {e}")
             return False, "使用成长次数失败"
 
-    def update_skill_growth(self, char_name: str, skill_name: str, growth_value: int) -> bool:
-        """更新技能的成长值"""
+    def update_skill_growth(self, char_name: str, skill_name: str, growth_value: int, user_id: str = "系统", points_used: int = 1) -> bool:
+        """更新技能成长值"""
         try:
             cursor = self.connection.cursor()
             
-            # 获取角色ID
-            cursor.execute('SELECT id FROM characters WHERE char_name = ?', (char_name,))
+            # 获取技能当前各个部分的值
+            cursor.execute('''
+            SELECT base, occupation, interest, growth 
+            FROM character_skills 
+            WHERE character_id = (
+                SELECT id FROM characters WHERE char_name = ?
+            ) AND skill_name = ?
+            ''', (char_name, skill_name))
+            
             result = cursor.fetchone()
             if not result:
-                logger.error(f"未找到角色: {char_name}")
-                return False
-            
-            character_id = result[0]
-            
-            # 查找技能
-            cursor.execute('''
-            SELECT id, growth FROM character_skills 
-            WHERE character_id = ? AND (
-                skill_name = ? OR 
-                skill_name = ? OR 
-                skill_name LIKE ?
-            )
-            ''', (
-                character_id, 
-                skill_name,
-                skill_name.lower(),
-                f"{skill_name}:%"  # 处理带子类型的技能
-            ))
-            
-            skill = cursor.fetchone()
-            if not skill:
                 logger.error(f"未找到技能: {skill_name}")
                 return False
             
-            skill_id, current_growth = skill
-            # 如果当前growth为空，设为0
+            base, occupation, interest, current_growth = result
+            # 计算总值
+            base = int(base or 0)
+            occupation = int(occupation or 0)
+            interest = int(interest or 0)
             current_growth = int(current_growth or 0)
+            
+            # 当前总值和更新后的总值
+            total_current = base + occupation + interest + current_growth
             new_growth = current_growth + growth_value
+            total_new = base + occupation + interest + new_growth
             
             # 更新成长值
             cursor.execute('''
             UPDATE character_skills 
-            SET growth = ?, 
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-            ''', (new_growth, skill_id))
+            SET growth = ? 
+            WHERE character_id = (
+                SELECT id FROM characters WHERE char_name = ?
+            ) AND skill_name = ?
+            ''', (new_growth, char_name, skill_name))
             
             self.connection.commit()
+            logger.debug(f"技能 {skill_name} 成长值更新: {total_current} -> {total_new}")
             return True
             
         except Exception as e:
-            logger.error(f"更新技能成长值失败: {e}")
+            self.connection.rollback()
+            logger.error(f"更新技能成长值失败: {e}", exc_info=True)
             return False
 
-    def add_character_history(self, char_name: str, user_id: str, room_id: Optional[str], 
-                             action: str, field_name: str, old_value: str, new_value: str,
-                             points_used: Optional[int] = None) -> bool:
-        """添加角色变更历史记录"""
+    def add_operation_history(self, char_name: str, user_id: str, action: str):
+        """记录角色操作历史（创建、使用、释放等）"""
         try:
             cursor = self.connection.cursor()
-            
-            # 获取角色ID
-            cursor.execute('SELECT id FROM characters WHERE char_name = ?', (char_name,))
-            result = cursor.fetchone()
-            if not result:
-                logger.error(f"未找到角色: {char_name}")
-                return False
-            
-            character_id = result[0]
-            
-            # 添加历史记录
+            # 使用Python的datetime生成当前确切时间
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             cursor.execute('''
-            INSERT INTO character_history (
-                character_id, user_id, room_id, action, 
-                field_name, old_value, new_value, points_used, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-            ''', (
-                character_id, user_id, room_id, action, 
-                field_name, old_value, new_value, points_used
-            ))
-            
+            INSERT INTO character_operation_history (
+                character_name, user_id, action, created_at
+            ) VALUES (?, ?, ?, ?)
+            ''', (char_name, user_id, action, current_time))
             self.connection.commit()
-            return True
-            
+            logger.debug(f"记录操作历史: {char_name} - {action}")
         except Exception as e:
-            logger.error(f"添加角色历史记录失败: {e}")
-            return False
+            logger.error(f"记录操作历史失败: {e}")
+
+    def get_character_operation_history(self, char_name: str, limit: int = 50) -> list:
+        """获取角色卡操作历史（创建、使用、释放等）"""
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute('''
+            SELECT created_at, user_id, action
+            FROM character_operation_history
+            WHERE character_name = ?
+            ORDER BY created_at DESC
+            LIMIT ?
+            ''', (char_name, limit))
+            return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"获取角色操作历史失败: {e}", exc_info=True)
+            return []
+
+    def get_character_growth_history(self, char_name: str, limit: int = 50) -> list:
+        """获取角色成长历史（技能成长、成长点数调整等）"""
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute('''
+            SELECT created_at, user_id, action,
+                   field_name, old_value, new_value, points_used
+            FROM character_growth_history
+            WHERE character_name = ?
+            ORDER BY created_at DESC
+            LIMIT ?
+            ''', (char_name, limit))
+            return cursor.fetchall()
+        except Exception as e:
+            logger.error(f"获取角色成长历史失败: {e}", exc_info=True)
+            return []
+
+    def add_growth_history(self, char_name: str, user_id: str, 
+                          action: str, field_name: str, old_value: str, 
+                          new_value: str, points_used: int = None):
+        """记录角色成长历史（技能成长、成长点数调整等）"""
+        try:
+            cursor = self.connection.cursor()
+            # 使用Python的datetime生成当前确切时间
+            current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            cursor.execute('''
+            INSERT INTO character_growth_history (
+                character_name, user_id, action,
+                field_name, old_value, new_value, points_used, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (char_name, user_id, action, 
+                  field_name, old_value, new_value, points_used, current_time))
+            self.connection.commit()
+            logger.debug(f"记录成长历史: {char_name} - {field_name}: {old_value} -> {new_value}")
+        except Exception as e:
+            logger.error(f"记录成长历史失败: {e}")
 
     @contextmanager
     def get_connection(self):

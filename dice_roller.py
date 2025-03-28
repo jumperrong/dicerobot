@@ -294,25 +294,25 @@ def evaluate_expression(expr: Expression) -> Tuple[List[int], List[str], Evaluat
 
 def dicehelp() -> str:
     """返回骰子命令的帮助信息"""
-    return """🎲 骰子指令说明:
+    return """🎲 骰子指令详细说明:
     
-基础指令:
+🎯 基础指令:
 • .r 或 r 开头，如 .rd20、rd6
 • 省略骰子数量时默认为1，如 d20 = 1d20
 
-基础表达式:
+📊 基础表达式:
 • NdS     掷N个S面骰，如 2d6
 • d20     掷1个20面骰
 • 2d8+3   掷2个8面骰并加3
 
-高级表达式:
+🎮 高级表达式:
 • 优势投掷:  d20a 或 d20a3 (a后数字为投掷次数，默认2次)
 • 劣势投掷:  d20p 或 d20p3 (p后数字为投掷次数，默认2次)
 • 重复投掷:  d4:d6 (用d4的结果决定投掷d6的次数)
 • 带括号重复: d4:(d8+2) (重复投掷括号内的完整表达式)
 • 复合运算:  d8*(d4+2) (支持加减乘除和括号)
 
-示例说明:
+📝 示例说明:
 1. d4:d8
    - 先投d4获得次数N
    - 重复投掷d8共N次
@@ -333,7 +333,7 @@ def dicehelp() -> str:
    - 再计算(d4+2)的结果
    - 将两个结果相乘
 
-注意事项:
+⚠️ 注意事项:
 • 表达式中请勿包含空格
 • 运算符优先级: () > d > a/p > : > */ > +-
 • 括号内的表达式会作为一个整体计算
@@ -357,10 +357,55 @@ def format_reply_message(nickname: str, result: str, extra_text: Optional[str] =
         # 构建昵称部分，如果额外文本则添加
         name_part = nickname
         if extra_text:
-            name_part = f"{nickname} {extra_text}"
+            name_part = f"{nickname} 📝 {extra_text}"
             
-        # 正常结果的式化
-        return f"🎲 {name_part} 掷骰: \n{result}"
+        # 检查是否为帮助信息
+        if "骰子指令说明" in result:
+            return result
+            
+        # 提取表达式和结果部分
+        lines = result.strip().split('\n')
+        expr = lines[0]
+        
+        # 查找最终结果行
+        result_line = ""
+        for line in lines:
+            if line.startswith("结果:"):
+                result_line = line
+                break
+        
+        # 为最终结果添加醒目图标
+        if result_line:
+            result_value = result_line.split(":", 1)[1].strip()
+            try:
+                value = int(result_value)
+                # 根据结果值选择图标
+                if value >= 95:
+                    result_icon = "🌟"  # 极高结果
+                elif value >= 80:
+                    result_icon = "⭐"  # 高结果
+                elif value <= 5:
+                    result_icon = "💥"  # 极低结果
+                elif value <= 20:
+                    result_icon = "❗"  # 低结果
+                else:
+                    result_icon = "✅"  # 普通结果
+                
+                # 替换原结果行
+                new_result_line = f"结果: {result_icon} {result_value}"
+                result = result.replace(result_line, new_result_line)
+            except ValueError:
+                pass  # 如果无法转换为整数，则不添加特殊图标
+        
+        # 为表达式添加图标
+        formatted_expr = f"🎯 表达式: {expr}"
+        result = result.replace(expr, formatted_expr)
+        
+        # 为"骰值:"添加图标
+        result = result.replace("骰值:", "🎲 骰值:")
+            
+        # 返回格式化结果
+        return f"🎲 {name_part} 掷骰:\n{result}"
         
     except Exception as e:
         return f"❌ 发生未知错误: {str(e)}"
@@ -495,7 +540,7 @@ def split_by_operator(expr: str, operator: str) -> Tuple[str, str]:
     raise DiceError(f"无法按运算符'{operator}'分割表达式")
 
 def split_by_operators(expr: str, operators: str) -> List[str]:
-    """按多个运算符分割表达式，保��运算符顺序"""
+    """按多个运算符分割表达式，保持运算符顺序"""
     parts = []
     current_part = ''
     bracket_count = 0
