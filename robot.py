@@ -195,6 +195,12 @@ class CommandHandler:
                 needs_config=False,
                 needs_dnd_data=False,
                 description='[管理员] 设置角色成长次数\n用法: .setgrow <次数>'
+            ),
+            '.find': CommandInfo(
+                handler=self.handle_find_command,
+                needs_config=False,
+                needs_dnd_data=False,
+                description='查询数据库中的技能、道具和笔记\n用法: .find <关键词>'
             )
         }
     
@@ -745,6 +751,16 @@ AI功能控制:
             
         except Exception as e:
             logger.error(f"处理设置成长次数命令出错: {e}")
+            self._send_message(wcf, msg, "处理命令时出错，请重试")
+
+    def handle_find_command(self, wcf: Wcf, msg: WxMsg, **kwargs) -> None:
+        """处理查询命令"""
+        try:
+            keyword = msg.content.split('.find', 1)[1].strip()
+            result = character_manager.find_item(keyword, msg.sender)
+            self._send_message(wcf, msg, result)
+        except Exception as e:
+            logger.error(f"处理查询命令出错: {e}")
             self._send_message(wcf, msg, "处理命令时出错，请重试")
 
 class DiceRobot:

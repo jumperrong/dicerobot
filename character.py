@@ -816,6 +816,12 @@ class CharacterManager:
 📝 .grow history [角色名] [显示条数] - 显示角色成长历史
 🔄 .setgrow <角色名> <点数> - 设置角色成长点数（管理员）
 
+🔍 查询命令：
+.find <关键词> - 查询当前角色卡中的技能、物品和笔记
+• 技能：显示名称和总值
+• 物品：显示名称、类型和描述
+• 笔记：显示标题和内容
+
 🎲 技能成长规则：
 • 成长检定使用D100，需要投出大于当前技能值的结果
 • 成长值根据当前技能值决定：
@@ -967,6 +973,85 @@ class CharacterManager:
     def record_growth_points_change(self, char_name: str, user_id: str, old_value: str, new_value: str) -> None:
         """记录成长点数变更的便捷方法"""
         self.add_growth_history(char_name, user_id, "setgrow", "growth_points", old_value, new_value, None)
+
+    def find_item(self, keyword: str, user_id: str) -> str:
+        """查询数据库中的技能、道具和笔记
+        
+        Args:
+            keyword (str): 查询关键词
+            user_id (str): 用户ID
+            
+        Returns:
+            str: 查询结果
+        """
+        try:
+            # 获取用户当前使用的角色
+            current_char = self.get_current_character(user_id, None)
+            if not current_char:
+                return "请先使用 .char use <角色名> 选择要使用的角色"
+            
+            cursor = self.db.connection.cursor()
+            results = []
+            
+            # 查询技能
+            cursor.execute('''
+            SELECT c.char_name, cs.skill_name, cs.base, cs.occupation, cs.interest, cs.growth
+            FROM character_skills cs
+            JOIN characters c ON cs.character_id = c.id
+            WHERE c.char_name = ? AND cs.skill_name LIKE ?
+            ORDER BY cs.skill_name
+            ''', (current_char, f'%{keyword}%'))
+            
+            skills = cursor.fetchall()
+            if skills:
+                results.append("🎯 技能:")
+                for char_name, skill_name, base, occupation, interest, growth in skills:
+                    # 计算技能总值
+                    total = sum(int(x or 0) for x in [base, occupation, interest, growth])
+                    results.append(f"  • {skill_name}: {total}")
+            
+            # 查询物品
+            cursor.execute('''
+            SELECT c.char_name, ci.item_name, ci.type, ci.description
+            FROM character_items ci
+            JOIN characters c ON ci.character_id = c.id
+            WHERE c.char_name = ? AND (ci.item_name LIKE ? OR ci.description LIKE ?)
+            ORDER BY ci.item_name
+            ''', (current_char, f'%{keyword}%', f'%{keyword}%'))
+            
+            items = cursor.fetchall()
+            if items:
+                results.append("\n🎒 物品:")
+                for char_name, item_name, item_type, description in items:
+                    item_info = f"  • {item_name}"
+                    if item_type:
+                        item_info += f" [{item_type}]"
+                    if description:
+                        item_info += f" - {description}"
+                    results.append(item_info)
+            
+            # 查询笔记
+            cursor.execute('''
+            SELECT c.char_name, cn.title, cn.content
+            FROM character_notes cn
+            JOIN characters c ON cn.character_id = c.id
+            WHERE c.char_name = ? AND (cn.title LIKE ? OR cn.content LIKE ?)
+            ''', (current_char, f'%{keyword}%', f'%{keyword}%'))
+            
+            notes = cursor.fetchall()
+            if notes:
+                results.append("\n📝 笔记:")
+                for char_name, title, content in notes:
+                    results.append(f"  • {title} - {content}")
+            
+            if not results:
+                return f"在角色「{current_char}」中未找到包含关键词「{keyword}」的内容"
+            
+            return "\n".join(results)
+            
+        except Exception as e:
+            logger.error(f"查询数据库失败: {e}")
+            return "查询失败，请稍后重试"
 
     def get_active_character(self, user_id: str, room_id: Optional[str]) -> Optional[str]:
         """获取用户当前使用的角色名称"""

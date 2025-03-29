@@ -496,6 +496,33 @@ def handle_draw_command(wcf: Wcf, msg: WxMsg, config: dict) -> None:
                     if is_txt:
                         # txt格式只显示卡牌名称，添加图标
                         cards_text = "\n".join([f"🎴 {card.split(':', 1)[0].strip()}" for card in cards])
+                        
+                        # 如果是108将牌堆，尝试发送图片
+                        if deck_name == "108bro":
+                            try:
+                                # 获取当前文件所在目录
+                                current_dir = os.path.dirname(os.path.abspath(__file__))
+                                # 构建图片目录路径
+                                image_dir = os.path.join(current_dir, "decks", "pics")
+                                
+                                # 遍历抽取的卡牌
+                                for card in cards:
+                                    # 从卡牌文本中提取编号和名称
+                                    card_parts = card.split(':', 1)[0].strip()  # 只取冒号前的部分
+                                    # 构建图片文件名（例如：103_地壮星_母夜叉_孙二娘.jpg）
+                                    image_name = f"{card_parts}.jpg"
+                                    image_path = os.path.join(image_dir, image_name)
+                                    
+                                    # 如果图片存在，发送图片
+                                    if os.path.exists(image_path):
+                                        if msg.roomid:
+                                            wcf.send_image(image_path, msg.roomid)
+                                        else:
+                                            wcf.send_image(image_path, msg.sender)
+                                    else:
+                                        logger.error(f"图片文件不存在: {image_path}")
+                            except Exception as e:
+                                logger.error(f"发送108将图片失败: {e}")
                     else:
                         # json格式显示完整内容，添加图标
                         cards_text = "\n".join([f"🎴 {card}" for card in cards])
