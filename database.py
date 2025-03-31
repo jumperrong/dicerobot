@@ -9,6 +9,7 @@ from contextlib import contextmanager
 import queue
 import threading
 import time
+from backup_manager import BackupManager
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,11 @@ class Database:
             timeout=20.0  # 增加超时时间
         )
         self._init_db()
+        
+        # 初始化备份管理器
+        self.backup_manager = BackupManager(self.db_path)
+        # 启动自动备份
+        self.backup_manager.start_auto_backup()
     
     def _ensure_db_dir(self) -> str:
         """确保数据库目录存在"""
@@ -1143,6 +1149,42 @@ class Database:
         """清理资源"""
         if hasattr(self, 'connection'):
             self.connection.close()
+        # 停止自动备份
+        if hasattr(self, 'backup_manager'):
+            self.backup_manager.stop_auto_backup()
+
+    def create_backup(self, backup_name: Optional[str] = None) -> str:
+        """
+        创建数据库备份
+        
+        Args:
+            backup_name: 备份文件名，如果不指定则使用时间戳
+            
+        Returns:
+            str: 备份文件路径
+        """
+        return self.backup_manager.create_backup(backup_name)
+    
+    def restore_backup(self, backup_path: str) -> bool:
+        """
+        从备份文件恢复数据库
+        
+        Args:
+            backup_path: 备份文件路径
+            
+        Returns:
+            bool: 是否恢复成功
+        """
+        return self.backup_manager.restore_backup(backup_path)
+    
+    def list_backups(self) -> List[str]:
+        """
+        列出所有备份文件
+        
+        Returns:
+            List[str]: 备份文件路径列表
+        """
+        return self.backup_manager.list_backups()
 
 # 创建全局数据库实例
 db = Database() 

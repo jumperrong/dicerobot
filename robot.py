@@ -201,7 +201,13 @@ class CommandHandler:
                 needs_config=False,
                 needs_dnd_data=False,
                 description='查询数据库中的技能、道具和笔记\n用法: .find <关键词>'
-            )
+            ),
+            '.backup': CommandInfo(
+                handler=self.handle_backup_command,
+                needs_config=False,
+                needs_dnd_data=False,
+                description='数据库备份管理\n用法: .backup [list/restore <备份文件名>]'
+            ),
         }
     
     def get_command_info(self, command: str) -> Optional[CommandInfo]:
@@ -260,6 +266,9 @@ AI功能:
 • .ai room on/off - 开启/关闭当前群聊的AI功能
 • .setgrow [角色名] [点数] - 设置角色成长点数
 • .sys - 查看机器人运行状态
+• .backup - 创建数据库备份
+• .backup list - 列出所有备份文件
+• .backup restore <备份文件名> - 从指定备份恢复数据库
 
 详细说明:
 • .dicehelp  - 显示骰子指令详细说明
@@ -391,15 +400,32 @@ AI功能控制:
   - 开启/关闭当前群聊的AI功能
   - 示例: .ai room on
 
+数据库备份:
+• .backup
+  - 创建数据库备份
+  - 备份文件存储在 data/backups 目录下
+  - 自动保留最近的10个备份
+• .backup list
+  - 列出所有备份文件
+  - 显示备份时间和文件大小
+• .backup restore <备份文件名>
+  - 从指定备份恢复数据库
+  - 恢复前会自动创建当前数据库的临时备份
+  - 如果恢复失败，会自动恢复临时备份
+  - 注意：恢复操作会覆盖当前数据库
+
 系统命令:
 • .sys
   - 查看机器人运行状态
   - 显示AI功能配置、群聊状态等
+  - 显示数据库备份状态
 
 注意事项:
 1. 群聊中需要@机器人才会响应
 2. 私聊可以直接对话
-3. 配置更改会自动保存到配置文件"""
+3. 配置更改会自动保存到配置文件
+4. 数据库备份文件存储在 data/backups 目录下
+5. 建议定期将备份文件复制到其他位置保存"""
 
         self._send_message(wcf, msg, admin_help)
     
@@ -761,6 +787,85 @@ AI功能控制:
             self._send_message(wcf, msg, result)
         except Exception as e:
             logger.error(f"处理查询命令出错: {e}")
+            self._send_message(wcf, msg, "处理命令时出错，请重试")
+
+    def handle_backup_command(self, wcf: Wcf, msg: WxMsg, **kwargs) -> None:
+        """处理数据库备份命令"""
+        try:
+            # 检查是否是管理员
+            if not self.qwen or not self.qwen.is_admin(msg.sender):
+                self._send_message(wcf, msg, "只有管理员可以使用此命令")
+                return
+            
+            parts = msg.content.split('.backup', 1)[1].strip().split()
+            if not parts:
+                # 创建备份
+                backup_path = character_manager.db.create_backup()
+                backup_name = os.path.basename(backup_path)
+                self._send_message(wcf, msg, f"数据库备份已创建: {backup_name}")
+                return
+            
+            subcmd = parts[0].lower()
+            
+            if subcmd == "list":
+                # 列出所有备份
+                backups = character_manager.db.list_backups()
+                if not backups:
+                    self._send_message(wcf, msg, "没有找到任何备份文件")
+                    return
+                
+                backup_list = "数据库备份列表:\n"
+                for backup in backups:
+                    backup_name = os.path.basename(backup)
+                    backup_list += f"- {backup_name}\n"
+                
+                self._send_message(wcf, msg, backup_list)
+                return
+            
+            elif subcmd == "restore":
+                if len(parts) < 2:
+                    self._send_message(wcf, msg, "请指定要恢复的备份文件名")
+                    return
+                
+                backup_name = parts[1]
+                backup_path = os.path.join(character_manager.db.backup_manager.backup_dir, backup_name)
+                
+                if not os.path.exists(backup_path):
+                    self._send_message(wcf, msg, f"备份文件不存在: {backup_name}")
+                    return
+                
+                # 确认恢复
+                self._send_message(wcf, msg, f"⚠️ 即将从备份 {backup_name} 恢复数据库，此操作将覆盖当前数据库。\n请确认是否继续？(y/n)")
+                
+                # 等待用户确认
+                def handle_confirm(confirm_msg: WxMsg):
+                    if confirm_msg.sender != msg.sender:
+                        return
+                    
+                    if confirm_msg.content.lower() == 'y':
+                        try:
+                            success = character_manager.db.restore_backup(backup_path)
+                            if success:
+                                self._send_message(wcf, msg, f"数据库已从备份 {backup_name} 恢复")
+                            else:
+                                self._send_message(wcf, msg, "数据库恢复失败")
+                        except Exception as e:
+                            self._send_message(wcf, msg, f"数据库恢复出错: {str(e)}")
+                    else:
+                        self._send_message(wcf, msg, "已取消恢复操作")
+                    
+                    # 移除确认处理函数
+                    wcf.on_message.remove(handle_confirm)
+                
+                # 添加确认处理函数
+                wcf.on_message.append(handle_confirm)
+                return
+            
+            else:
+                self._send_message(wcf, msg, "未知的备份命令。用法：\n.backup - 创建备份\n.backup list - 列出备份\n.backup restore <备份文件名> - 恢复备份")
+                
+        except Exception as e:
+            logger.error(f"处理备份命令出错: {e}")
             self._send_message(wcf, msg, "处理命令时出错，请重试")
 
 class DiceRobot:
