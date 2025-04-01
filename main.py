@@ -8,6 +8,7 @@ from wcferry import Wcf
 from robot import handle_message, CommandHandler
 from log_manager import LogManager
 import asyncio
+from moyu_calendar import MoyuCalendarService
 
 logger = logging.getLogger(__name__)
 
@@ -122,6 +123,26 @@ def load_config() -> dict:
         else:
             logger.info("天气预警: 已禁用")
         
+        # 摸鱼日历配置
+        moyu_config = config.get('moyu_calendar', {})
+        logger.info("\n=== 摸鱼日历配置 ===")
+        if moyu_config.get('enabled', False):
+            logger.info("摸鱼日历功能: 已启用")
+            logger.info(f"• 播报时间: {moyu_config.get('broadcast_time', '08:00')}")
+            moyu_rooms = moyu_config.get('enabled_rooms', [])
+            if moyu_rooms:
+                logger.info(f"• 已配置群聊: {len(moyu_rooms)}个")
+                for room_id in moyu_rooms:
+                    try:
+                        group_name = wcf.get_room_name(room_id) or room_id
+                        logger.info(f"  - {group_name} ({room_id})")
+                    except:
+                        logger.info(f"  - {room_id}")
+            else:
+                logger.warning("• 未配置播报群聊")
+        else:
+            logger.info("摸鱼日历功能: 已禁用")
+        
         # 牌堆配置
         logger.info("\n=== 牌堆配置 ===")
         decks_config = config.get('decks', {})
@@ -173,6 +194,7 @@ def main():
     logger.info("正在启动骰子机器人...")
     
     handler = None  # 声明handler变量以便在finally中使用
+    moyu_service = None  # 声明摸鱼日历服务变量
     
     try:
         # 加载DND数据
@@ -223,6 +245,14 @@ def main():
             handler.qwen.weather_service.wcf = wcf
             # 启动每日播报和预警监控
             loop.create_task(handler.qwen.weather_service.start_weather_report(handler.qwen.weather_service.check_and_broadcast))
+        
+        # 初始化摸鱼日历服务
+        moyu_service = MoyuCalendarService(config)
+        moyu_service.wcf = wcf
+        # 启动摸鱼日历服务
+        if moyu_service.enabled:
+            logger.info("启动摸鱼日历服务...")
+            loop.create_task(moyu_service.start_moyu_calendar_service())
         
         # 主循环
         while True:

@@ -12,6 +12,7 @@ ai:
     # 群聊配置
     group_chat:
       enabled_rooms:  # 启用AI功能的群聊ID列表
+      - 56168799809@chatroom
       - 52275509390@chatroom
     logging:
       show_messages: true  # 是否显示消息日志
@@ -58,10 +59,17 @@ ai:
         enabled: true          # 是否启用预警功能
         interval: 10           # 预警检查间隔(分钟)
 
+# 摸鱼日历配置
+moyu_calendar:
+  enabled: true                # 是否启用摸鱼日历功能
+  broadcast_time: "21:25"      # 播报时间(工作日)
+  enabled_rooms:               # 启用摸鱼日历的群聊ID列表
+  - 52275509390@chatroom
+  - 56168799809@chatroom
 # 机器人基本配置
 bot:
   name: 骰子机器人
-  version: 1.1.0
+  version: 2.1.0
 
 # 牌堆配置
 decks:

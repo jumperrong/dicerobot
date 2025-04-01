@@ -23,6 +23,10 @@ import xml.etree.ElementTree as ET
 import shutil  # 添加到文件顶部的导入部分
 import json
 import time
+import random
+import re
+import aiohttp
+from moyu_calendar import MoyuCalendarService
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +74,7 @@ class CommandHandler:
         if not hasattr(self, 'initialized'):
             self.commands: Dict[str, CommandInfo] = {}
             self.qwen = None
+            self.moyu_service = None
             self.waiting_for_character_file = {}  # Dict[str, Optional[str]]  # user_id -> room_id
             self._register_commands()
             self.initialized = True
@@ -97,6 +102,11 @@ class CommandHandler:
             if weather_config:
                 weather_service = WeatherService(weather_config)
                 self.qwen.set_weather_service(weather_service)
+            
+            # 初始化摸鱼日历服务
+            moyu_config = config.get('moyu_calendar', {})
+            if moyu_config:
+                self.moyu_service = MoyuCalendarService(config)
             
         except Exception as e:
             logger.error(f"初始化 AI 功能出错: {e}")
@@ -200,7 +210,7 @@ class CommandHandler:
                 handler=self.handle_find_command,
                 needs_config=False,
                 needs_dnd_data=False,
-                description='查询数据库中的技能、道具和笔记\n用法: .find <关键词>'
+                description='查询数据库中的技能、物品和笔记\n用法: .find <关键词>'
             ),
             '.backup': CommandInfo(
                 handler=self.handle_backup_command,
@@ -246,36 +256,39 @@ class CommandHandler:
 
 牌堆与人品:
 • .draw [牌堆] [数量] - 从指定牌堆抽卡
-• .jrrp        - 今日人品（从64卦中抽取一卦）
+• .jrrp         - 查看今日人品值
+• .drawhelp     - 查看牌堆帮助
 
-角色卡系统:
-• .char        - 角色卡管理 (.char help 查看详细用法)
-• .c [技能名]   - 进行技能检定
-• .grow [技能名] [次数] - 进行技能成长
+天气与工具:
+• .weather [城市] [3d/7d] - 查询天气
+• .dnd [关键词]   - 查询D&D规则
+• .sys          - 显示机器人状态
 
-查询服务:
-• .dnd [关键词] - 查询D&D规则内容
-• .weather [城市] [天数] - 查看天气信息
-  示例: .weather 北京 3d (查看北京未来3天天气)
+角色卡指令:
+• .char help    - 角色卡管理帮助
+• .c [技能名]    - 进行技能检定
+• .grow [技能名] - 技能成长
+• .find [关键词] - 查找角色信息
 
-AI功能:
-• 群聊中@机器人 - 使用AI聊天功能
-• 私聊直接发送消息 - 开始AI对话
+其他指令:
+• .adminhelp    - 管理员命令帮助
+• .backup       - 数据库备份管理
 
-管理员指令:
-• .ai room on/off - 开启/关闭当前群聊的AI功能
-• .setgrow [角色名] [点数] - 设置角色成长点数
-• .sys - 查看机器人运行状态
-• .backup - 创建数据库备份
-• .backup list - 列出所有备份文件
-• .backup restore <备份文件名> - 从指定备份恢复数据库
+查看具体指令详情请使用 .help [命令]，例如: .help weather"""
 
-详细说明:
-• .dicehelp  - 显示骰子指令详细说明
-• .drawhelp  - 显示抽卡指令详细说明
-• .char help - 显示角色卡指令详细说明"""
-
-        self._send_message(wcf, msg, help_text)
+        # 检查是否是查询特定命令的帮助
+        if len(msg.content.split()) > 1:
+            cmd = msg.content.split()[1].strip()
+            if cmd.startswith('.'):
+                cmd_info = self.get_command_info(cmd)
+                if cmd_info and cmd_info.description:
+                    help_text = f"📖 {cmd} 命令说明:\n\n{cmd_info.description}"
+                else:
+                    help_text = f"未找到命令 {cmd} 的帮助信息"
+        
+        # 发送帮助信息
+        target = msg.roomid if msg.roomid else msg.sender
+        wcf.send_text(help_text, target)
     
     def execute_command(self, wcf: Wcf, msg: WxMsg, config: dict = None, dnd_data: dict = None) -> None:
         """执行命令"""
@@ -399,6 +412,17 @@ AI功能控制:
 • .ai room on/off
   - 开启/关闭当前群聊的AI功能
   - 示例: .ai room on
+
+功能设置:
+• .setgrow <角色名> <点数>
+  - 设置角色成长点数
+  - 示例: .setgrow 川尻早人 5
+
+摸鱼日历:
+• 配置文件中可设置:
+  - 开启/关闭摸鱼日历功能
+  - 设置播报时间
+  - 设置播报群聊列表
 
 数据库备份:
 • .backup

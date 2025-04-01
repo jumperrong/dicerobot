@@ -6,7 +6,7 @@ requests>=2.32.3
 
 # AI和天气服务
 dashscope>=1.20.14     # 通义千问API
-aiohttp>=3.11.10       # 异步HTTP客户端
+aiohttp>=3.11.10       # 异步HTTP客户端，用于天气和摸鱼日历API
 
 # 系统和监控
 psutil>=5.9.6         # 系统资源监控
