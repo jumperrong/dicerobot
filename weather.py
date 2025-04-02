@@ -6,6 +6,7 @@ from typing import Optional, Dict, List, Any, Union
 import json
 import hashlib
 import os
+from cache_manager import cache_manager
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,9 @@ class WeatherService:
         self.location_cache = {}  # 地理位置缓存
         self.last_warning_check = None  # 上次检查预警的时间
         self.enabled_rooms = set()  # 已启用的群聊列表
+        self._cache_modified = False  # 缓存是否被修改
+        self._last_save_time = None  # 上次保存时间
+        self._save_interval = 60  # 保存间隔（秒）
         
         # 从配置中获取已启用的群聊
         if 'group_chat' in config:
@@ -34,8 +38,9 @@ class WeatherService:
         self.broadcast_times = self._parse_broadcast_times(
             self.daily_report.get('broadcast_times', [])
         )
-        # 添加播报记录缓存
-        self.broadcast_history = {}  # 格式: {date: set(broadcast_times)}
+        
+        # 加载播报历史记录
+        self.broadcast_history = cache_manager.load_broadcast_history('weather')
         
         # 验证配置
         if not self.api_key:
@@ -48,8 +53,8 @@ class WeatherService:
         self._load_warning_cache()  # 加载预警缓存
         
         # 添加重试配置
-        self.retry_count = config.get('retry', {}).get('count', 3)  # 默认重试3次
-        self.retry_delay = config.get('retry', {}).get('delay', 1)  # 默认延迟1秒
+        self.retry_count = config.get('retry', {}).get('count', 3)
+        self.retry_delay = config.get('retry', {}).get('delay', 1)
         
         logger.info(f"天气服务初始化完成:")
         logger.info(f"- 默认城市: {self.default_city}")
@@ -137,6 +142,12 @@ class WeatherService:
                 if location:
                     # 缓存结果
                     self.location_cache[city] = location
+                    
+                    # 标记缓存已修改
+                    self._cache_modified = True
+                    # 尝试保存缓存
+                    self._save_warning_cache()
+                    
                     return location
             
             logger.error(f"获取地理位置失败: {response}")
@@ -332,6 +343,11 @@ class WeatherService:
         old_dates = [date for date in self.broadcast_history if date != current_date]
         for date in old_dates:
             del self.broadcast_history[date]
+        
+        # 标记缓存已修改
+        self._cache_modified = True
+        # 尝试保存缓存
+        self._save_warning_cache()
     
     def _is_already_broadcasted(self, hour: int, minute: int) -> bool:
         """检查指定时间是否已经播报过"""
@@ -346,6 +362,11 @@ class WeatherService:
         if current_date not in self.broadcast_history:
             self.broadcast_history[current_date] = set()
         self.broadcast_history[current_date].add(f"{hour:02d}:{minute:02d}")
+        
+        # 标记缓存已修改
+        self._cache_modified = True
+        # 尝试保存缓存
+        self._save_warning_cache()
     
     async def check_and_broadcast(self, room_ids: List[str] = None) -> None:
         """检查并广播天气信息"""
@@ -524,7 +545,7 @@ class WeatherService:
             
             # 检查所有缓存的预警
             for cache_key, cached_warning in self.warning_cache.items():
-                if warning_id in cache_key:  # 找到匹���的预警ID
+                if warning_id in cache_key:  # 找到匹配的预警ID
                     # 检查发送时间是否在24小时内
                     send_time = datetime.strptime(cached_warning['time'], '%Y-%m-%d %H:%M:%S')
                     if send_time > time_window:
@@ -683,6 +704,7 @@ class WeatherService:
                             if datetime.now() > expire_time:
                                 # 预警已过期，从缓存中删除
                                 del self.warning_cache[cache_key]
+                                self._cache_modified = True
                                 self._save_warning_cache()
                                 return False
                         return True  # 24小时内发送过且未过期
@@ -719,7 +741,9 @@ class WeatherService:
             'pubTime': warning['pubTime'],
             'expire_time': expire_time.strftime('%Y-%m-%d %H:%M:%S')
         }
-        # 保存缓存到文件
+        # 标记缓存已修改
+        self._cache_modified = True
+        # 尝试保存缓存
         self._save_warning_cache()
     
     async def _broadcast_warning(self, warning: dict, room_ids: List[str]) -> None:
@@ -788,12 +812,13 @@ class WeatherService:
                     expired_keys.append(cache_key)  # 出错的缓存项也删除
             
             # 删除过期的缓存项
-            for key in expired_keys:
-                del self.warning_cache[key]
-            
             if expired_keys:
+                for key in expired_keys:
+                    del self.warning_cache[key]
                 logger.debug(f"已清理 {len(expired_keys)} 条过期预警记录")
-                # 保存更新后的缓存
+                # 标记缓存已修改
+                self._cache_modified = True
+                # 尝试保存缓存
                 self._save_warning_cache()
             
         except Exception as e:
@@ -802,13 +827,10 @@ class WeatherService:
     def _load_warning_cache(self) -> None:
         """加载预警缓存"""
         try:
-            current_date = datetime.now().strftime('%Y-%m-%d')
-            cache_file = f"warning_cache_{current_date}.json"
-            
-            if os.path.exists(cache_file):
-                with open(cache_file, 'r', encoding='utf-8') as f:
-                    self.warning_cache = json.load(f)
-                logger.debug(f"已加载预警缓存: {len(self.warning_cache)} 条记录")
+            # 从缓存管理器加载预警缓存
+            cache_data = cache_manager.load_broadcast_history('weather')
+            self.warning_cache = cache_data.get('warnings', {})
+            logger.debug(f"已加载预警缓存: {len(self.warning_cache)} 条记录")
         except Exception as e:
             logger.error(f"加载预警缓存失败: {e}")
             self.warning_cache = {}
@@ -816,12 +838,29 @@ class WeatherService:
     def _save_warning_cache(self) -> None:
         """保存预警缓存"""
         try:
-            current_date = datetime.now().strftime('%Y-%m-%d')
-            cache_file = f"warning_cache_{current_date}.json"
+            current_time = datetime.now()
             
-            with open(cache_file, 'w', encoding='utf-8') as f:
-                json.dump(self.warning_cache, f, ensure_ascii=False, indent=2)
+            # 如果缓存未被修改，直接返回
+            if not self._cache_modified:
+                return
+                
+            # 检查是否需要保存
+            if self._last_save_time:
+                elapsed = (current_time - self._last_save_time).total_seconds()
+                if elapsed < self._save_interval:
+                    return
+            
+            # 保存到缓存管理器
+            cache_data = {
+                'warnings': self.warning_cache
+            }
+            cache_manager.save_broadcast_history('weather', cache_data)
             logger.debug("保存预警缓存")
+            
+            # 更新状态
+            self._cache_modified = False
+            self._last_save_time = current_time
+            
         except Exception as e:
             logger.error(f"保存预警缓存失败: {e}")
 

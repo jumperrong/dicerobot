@@ -8,10 +8,12 @@ from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Tuple
 import threading
 import requests
+from wcferry import Wcf
+from cache_manager import cache_manager
 
 logger = logging.getLogger(__name__)
 
-class MoyuCalendarService:
+class MoyuCalendar:
     """摸鱼日历服务"""
     
     # 单例实例
@@ -20,7 +22,7 @@ class MoyuCalendarService:
     def __new__(cls, config: dict = None):
         """实现单例模式"""
         if cls._instance is None:
-            cls._instance = super(MoyuCalendarService, cls).__new__(cls)
+            cls._instance = super(MoyuCalendar, cls).__new__(cls)
             cls._instance._initialized = False
         return cls._instance
     
@@ -48,14 +50,33 @@ class MoyuCalendarService:
         self.broadcast_hour = hour
         self.broadcast_minute = minute
         
+        # 最大推迟播报时间（分钟）
+        self.max_delay_minutes = self.config.get('max_delay_minutes', 60)
+        
         # 摸鱼日历API
         self.moyu_api = "https://api.dudunas.top/api/moyu"
         
         # 节假日API
         self.holiday_api = "https://timor.tech/api/holiday/info"
         
+        # 获取当前脚本所在目录
+        self.current_dir = os.path.dirname(os.path.abspath(__file__))
+        # 缓存根目录
+        self.cache_root = os.path.join(self.current_dir, 'cache')
+        # 摸鱼日历缓存目录
+        self.cache_dir = os.path.join(self.cache_root, 'moyu')
+        # 图片缓存目录
+        self.image_cache_dir = os.path.join(self.cache_dir, 'images')
+        # 播报历史记录文件路径
+        self.broadcast_history_file = os.path.join(self.cache_dir, 'broadcast_history.json')
+        
+        # 创建所需的目录
+        os.makedirs(self.cache_root, exist_ok=True)
+        os.makedirs(self.cache_dir, exist_ok=True)
+        os.makedirs(self.image_cache_dir, exist_ok=True)
+        
         # 播报历史记录，避免重复播报
-        self.broadcast_history = {}
+        self.broadcast_history = cache_manager.load_broadcast_history('moyu')
         
         # 缓存今日摸鱼日历图片路径
         self.cached_image_path = None
@@ -71,17 +92,40 @@ class MoyuCalendarService:
         # 清理旧缓存图片
         self._cleanup_old_cache_files()
         
-        # 检查temp目录中是否已存在今日图片
+        # 检查缓存目录中是否已存在今日图片
         self._check_existing_image()
         
         logger.info(f"摸鱼日历服务初始化完成，启用状态: {'已启用' if self.enabled else '已禁用'}")
         if self.enabled:
             logger.info(f"播报时间: {self.broadcast_hour:02d}:{self.broadcast_minute:02d}")
+            logger.info(f"最大推迟时间: {self.max_delay_minutes}分钟")
             logger.info(f"已配置群聊: {len(self.enabled_rooms)}个")
             logger.info(f"缓存图片保留天数: {self.cache_expiry_days}天")
+            logger.info(f"缓存目录: {self.cache_dir}")
             
         # 标记为已初始化
         self._initialized = True
+    
+    def _load_broadcast_history(self) -> Dict[str, float]:
+        """从文件加载播报历史记录"""
+        try:
+            if os.path.exists(self.broadcast_history_file):
+                with open(self.broadcast_history_file, 'r', encoding='utf-8') as f:
+                    history = json.load(f)
+                logger.info(f"已从文件加载播报历史记录: {len(history)}条")
+                return history
+        except Exception as e:
+            logger.error(f"加载播报历史记录失败: {e}")
+        return {}
+
+    def _save_broadcast_history(self) -> None:
+        """保存播报历史记录到文件"""
+        try:
+            with open(self.broadcast_history_file, 'w', encoding='utf-8') as f:
+                json.dump(self.broadcast_history, f)
+            logger.debug("已保存播报历史记录到文件")
+        except Exception as e:
+            logger.error(f"保存播报历史记录失败: {e}")
     
     async def _make_request(self, url: str, params: dict = None) -> Optional[dict]:
         """发送HTTP请求并获取响应"""
@@ -160,15 +204,23 @@ class MoyuCalendarService:
         return key in self.broadcast_history
     
     def _is_image_cached_today(self) -> bool:
-        """检查今日图片是否已缓存"""
-        # 如果没有缓存路径或下载时间，则未缓存
-        if not self.cached_image_path or not self.image_download_time:
+        """检查图片是否在今天已经缓存"""
+        if not self.image_download_time:
             return False
             
-        # 检查缓存时间是否是今天
-        today = datetime.now().strftime('%Y-%m-%d')
-        cache_day = datetime.fromtimestamp(self.image_download_time).strftime('%Y-%m-%d')
-        return today == cache_day
+        try:
+            # 如果 image_download_time 已经是 datetime 对象，直接使用
+            if isinstance(self.image_download_time, datetime):
+                cache_day = self.image_download_time.strftime('%Y-%m-%d')
+            else:
+                # 如果是时间戳，转换为 datetime
+                cache_day = datetime.fromtimestamp(self.image_download_time).strftime('%Y-%m-%d')
+                
+            current_day = datetime.now().strftime('%Y-%m-%d')
+            return cache_day == current_day
+        except Exception as e:
+            logger.error(f"检查图片缓存时间出错: {e}")
+            return False
     
     def _is_cache_file_valid(self) -> bool:
         """检查缓存文件是否存在且有效"""
@@ -180,6 +232,9 @@ class MoyuCalendarService:
         """标记今日已播报"""
         key = self._get_broadcast_key()
         self.broadcast_history[key] = datetime.now().timestamp()
+        
+        # 保存到文件
+        self._save_broadcast_history()
         
         # 清理过期的历史记录
         self._clear_old_broadcast_history()
@@ -194,60 +249,16 @@ class MoyuCalendarService:
             if current_time - timestamp > 3 * 24 * 60 * 60:
                 keys_to_delete.append(key)
         
-        for key in keys_to_delete:
-            del self.broadcast_history[key]
+        if keys_to_delete:
+            for key in keys_to_delete:
+                del self.broadcast_history[key]
+            # 保存更新后的历史记录
+            self._save_broadcast_history()
+            logger.info(f"已清理{len(keys_to_delete)}条过期播报记录")
     
     def _cleanup_old_cache_files(self) -> None:
         """清理旧的缓存图片文件"""
-        try:
-            # 获取当前脚本所在目录
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            # 临时目录路径
-            temp_dir = os.path.join(current_dir, 'temp')
-            
-            # 如果临时目录不存在，返回
-            if not os.path.exists(temp_dir):
-                return
-                
-            # 获取当前时间
-            now = datetime.now()
-            # 计算过期时间点
-            expiry_date = now - timedelta(days=self.cache_expiry_days)
-            
-            # 遍历临时目录中的所有文件
-            removed_count = 0
-            for filename in os.listdir(temp_dir):
-                # 只处理摸鱼日历图片文件
-                if not filename.startswith('moyu_') or not filename.endswith('.jpg'):
-                    continue
-                    
-                # 获取文件的完整路径
-                file_path = os.path.join(temp_dir, filename)
-                
-                try:
-                    # 尝试从文件名中提取日期（格式：moyu_YYYYMMDD.jpg）
-                    date_str = filename[5:13]  # 提取YYYYMMDD部分
-                    file_date = datetime.strptime(date_str, '%Y%m%d')
-                    
-                    # 检查文件是否过期
-                    if file_date < expiry_date:
-                        # 删除过期文件
-                        os.remove(file_path)
-                        removed_count += 1
-                        logger.debug(f"已删除过期缓存图片: {filename}")
-                except (ValueError, IndexError):
-                    # 如果文件名格式不正确，跳过
-                    logger.warning(f"无法解析缓存文件日期: {filename}")
-                    continue
-                except Exception as e:
-                    # 其他错误，记录但不中断清理过程
-                    logger.error(f"删除缓存文件时出错: {filename}, 错误: {e}")
-                    continue
-                    
-            if removed_count > 0:
-                logger.info(f"已清理 {removed_count} 个过期缓存图片文件 (超过 {self.cache_expiry_days} 天)")
-        except Exception as e:
-            logger.error(f"清理缓存文件出错: {e}", exc_info=True)
+        cache_manager.cleanup_old_files('moyu', self.cache_expiry_days)
     
     async def download_moyu_calendar_image(self) -> Tuple[bool, str, str]:
         """下载摸鱼日历图片，返回 (是否成功, 图片路径, 图片URL)"""
@@ -276,14 +287,12 @@ class MoyuCalendarService:
                 logger.error("摸鱼日历图片URL为空")
                 return False, "", ""
             
-            # 获取当前脚本所在目录的绝对路径
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            # 创建临时目录
-            temp_dir = os.path.join(current_dir, 'temp')
-            os.makedirs(temp_dir, exist_ok=True)
-            
             # 设置图片保存路径
-            image_file = os.path.join(temp_dir, f"moyu_{datetime.now().strftime('%Y%m%d')}.jpg")
+            image_dir = cache_manager.get_image_cache_dir('moyu')
+            if not image_dir:
+                return False, "", ""
+                
+            image_file = os.path.join(image_dir, f"moyu_{datetime.now().strftime('%Y%m%d')}.jpg")
             logger.info(f"图片将保存到: {image_file}")
             
             # 添加重试机制
@@ -445,33 +454,56 @@ class MoyuCalendarService:
             # 首先检查缓存图片是否存在且有效
             cache_valid = self._is_cache_file_valid()
             
-            # 预下载时间点：2点、4点、6点，在前5分钟内尝试下载
-            prefetch_hours = [2, 4, 6]
-            if now.hour in prefetch_hours and now.minute in range(0, 5):
-                # 如果图片已经缓存成功且文件有效，则跳过预下载
-                if cache_valid:
-                    logger.info(f"图片已成功缓存，跳过{now.hour}点的预下载尝试")
-                    return
+            # 计算当前时间距离目标播报时间的分钟数
+            target_time = now.replace(hour=self.broadcast_hour, minute=self.broadcast_minute, second=0, microsecond=0)
+            time_diff_minutes = (target_time - now).total_seconds() / 60
+            
+            # 如果当前时间在7点之后，且还没到播报时间或在最大推迟时间内
+            if (now.hour >= 7 and time_diff_minutes > -self.max_delay_minutes and 
+                (time_diff_minutes > 0 or not cache_valid)):  # 如果还没到播报时间或没有有效缓存
                 
-                # 检查今日是否工作日
-                is_work_day = await self.is_workday()
-                if not is_work_day:
-                    logger.info(f"今日不是工作日，跳过{now.hour}点的预下载尝试")
+                # 每10分钟尝试一次
+                if now.minute % 10 == 0:
+                    # 如果图片已经缓存成功且文件有效，则跳过预下载
+                    if cache_valid:
+                        logger.info("图片已成功缓存，跳过本次预下载尝试")
+                        return
+                    
+                    # 检查今日是否工作日
+                    is_work_day = await self.is_workday()
+                    if not is_work_day:
+                        logger.info("今日不是工作日，跳过本次预下载尝试")
+                        return
+                    
+                    logger.info(f"尝试在{now.hour:02d}:{now.minute:02d}预下载摸鱼日历图片")
+                    success, _, _ = await self.download_moyu_calendar_image()
+                    if success:
+                        logger.info("预下载摸鱼日历图片成功，准备进行播报")
+                    else:
+                        # 计算距离播报时间还有多久
+                        if time_diff_minutes > 0:
+                            logger.info(f"预下载摸鱼日历图片失败，将在10分钟后重试（距离播报时间还有{int(time_diff_minutes)}分钟）")
+                        else:
+                            delay_minutes = min(-time_diff_minutes, self.max_delay_minutes)
+                            logger.info(f"预下载摸鱼日历图片失败，已推迟播报{int(delay_minutes)}分钟，将在10分钟后重试")
                     return
-                
-                logger.info(f"尝试在{now.hour}点预下载摸鱼日历图片")
-                success, _, _ = await self.download_moyu_calendar_image()
-                if success:
-                    logger.info(f"{now.hour}点预下载摸鱼日历图片成功，今日将不再尝试预下载")
-                else:
-                    logger.info(f"{now.hour}点预下载摸鱼日历图片失败，将在下个时间点再次尝试")
+            
+            # 检查是否到了播报时间（考虑推迟时间）
+            is_broadcast_time = (
+                now.hour == self.broadcast_hour and 
+                now.minute >= self.broadcast_minute and 
+                now.minute < self.broadcast_minute + 5
+            )
+            is_delayed_time = (
+                time_diff_minutes <= 0 and 
+                -time_diff_minutes <= self.max_delay_minutes and 
+                now.minute % 10 == 0
+            )
+            
+            if not (is_broadcast_time or is_delayed_time):
                 return
             
-            # 检查当前时间是否到了播报时间
-            if now.hour != self.broadcast_hour or now.minute not in range(self.broadcast_minute, self.broadcast_minute + 5):
-                return
-            
-            # 提前检查图片是否已经下载
+            # 如果到了播报时间但还没有图片，继续尝试下载
             if not cache_valid:
                 # 检查今日是否工作日
                 is_work_day = await self.is_workday()
@@ -480,10 +512,13 @@ class MoyuCalendarService:
                     # 标记已检查，避免重复检查
                     self._mark_as_broadcasted()
                     return
-                    
-                # 如果是工作日但还没有下载图片，立即下载
-                logger.info("播报前最后检查图片，开始下载")
-                await self.download_moyu_calendar_image()
+                
+                # 尝试最后一次下载
+                logger.info("播报时间已到，进行最后一次下载尝试")
+                success, _, _ = await self.download_moyu_calendar_image()
+                if not success and -time_diff_minutes < self.max_delay_minutes:
+                    logger.info(f"下载失败，推迟到下一个10分钟整点继续尝试（最多推迟{self.max_delay_minutes}分钟）")
+                    return
             
             # 播报摸鱼日历
             logger.info("开始播报摸鱼日历")
@@ -520,32 +555,50 @@ class MoyuCalendarService:
                 await asyncio.sleep(60)  # 出错后暂停1分钟
     
     def _check_existing_image(self) -> None:
-        """检查temp目录中是否存在今日的摸鱼日历图片"""
+        """检查缓存目录中是否已存在今日图片"""
         try:
-            # 获取当前脚本所在目录
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            # 临时目录路径
-            temp_dir = os.path.join(current_dir, 'temp')
-            
-            # 如果临时目录不存在，返回
-            if not os.path.exists(temp_dir):
+            # 获取图片缓存目录
+            image_dir = cache_manager.get_image_cache_dir('moyu')
+            if not image_dir:
                 return
                 
-            # 今日日期格式化
-            today_str = datetime.now().strftime('%Y%m%d')
-            # 预期的图片文件名
-            expected_filename = f"moyu_{today_str}.jpg"
-            # 完整路径
-            image_path = os.path.join(temp_dir, expected_filename)
+            # 获取今日日期
+            today = datetime.now().strftime('%Y%m%d')
+            image_file = os.path.join(image_dir, f"moyu_{today}.jpg")
             
             # 检查文件是否存在
-            if os.path.exists(image_path) and os.path.getsize(image_path) > 0:
-                logger.info(f"在启动时发现已存在的今日摸鱼日历图片: {image_path}")
-                # 设置缓存图片信息
-                self.cached_image_path = image_path
-                self.image_download_time = time.time()  # 使用当前时间作为下载时间
-                # 虽然不知道原始URL，但这不影响我们使用缓存的图片
-                self.cached_image_url = f"file://{image_path}"
-                logger.info("已自动加载本地摸鱼日历图片缓存")
+            if os.path.exists(image_file):
+                self.cached_image_path = image_file
+                self.image_download_time = datetime.fromtimestamp(os.path.getmtime(image_file))
+                logger.info(f"发现今日摸鱼日历图片缓存: {image_file}")
         except Exception as e:
-            logger.error(f"检查已存在图片出错: {e}", exc_info=True) 
+            logger.error(f"检查缓存图片时出错: {e}")
+
+    def _download_image(self, url: str) -> Optional[str]:
+        """下载图片并保存到缓存目录"""
+        try:
+            # 确保缓存目录存在
+            cache_dir = cache_manager.get_image_cache_dir('moyu')
+            os.makedirs(cache_dir, exist_ok=True)
+            
+            # 生成文件名
+            filename = f"moyu_{datetime.now().strftime('%Y%m%d')}.jpg"
+            filepath = os.path.join(cache_dir, filename)
+            
+            # 下载图片
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            
+            # 保存图片
+            with open(filepath, 'wb') as f:
+                f.write(response.content)
+            
+            # 更新下载时间（存储为时间戳）
+            self.image_download_time = int(datetime.now().timestamp())
+            
+            logger.info(f"图片已保存到: {filepath}")
+            return filepath
+            
+        except Exception as e:
+            logger.error(f"下载图片失败: {e}")
+            return None 

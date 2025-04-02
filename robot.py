@@ -26,7 +26,7 @@ import time
 import random
 import re
 import aiohttp
-from moyu_calendar import MoyuCalendarService
+from moyu_calendar import MoyuCalendar
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +106,7 @@ class CommandHandler:
             # 初始化摸鱼日历服务
             moyu_config = config.get('moyu_calendar', {})
             if moyu_config:
-                self.moyu_service = MoyuCalendarService(config)
+                self.moyu_service = MoyuCalendar(config)
             
         except Exception as e:
             logger.error(f"初始化 AI 功能出错: {e}")

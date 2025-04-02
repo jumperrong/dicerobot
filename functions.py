@@ -7,6 +7,7 @@ from dice_roller import dicehelp, format_reply_message
 import json
 import os
 import hashlib
+from cache_manager import cache_manager
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +15,14 @@ logger = logging.getLogger(__name__)
 jrrp_cache = {}
 jrrp_queried = {}
 
+# 获取当前脚本所在目录
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+# 缓存根目录
+CACHE_ROOT = os.path.join(CURRENT_DIR, 'cache')
+# jrrp缓存目录
+JRRP_CACHE_DIR = os.path.join(CACHE_ROOT, 'jrrp')
 # jrrp缓存文件路径
-JRRP_CACHE_FILE = "logs/jrrp_cache.json"
+JRRP_CACHE_FILE = os.path.join(JRRP_CACHE_DIR, 'broadcast_history.json')
 
 # 存储用户查询记录的字典
 deck_cache = {}  # 用于缓存已加载的牌堆
@@ -139,34 +146,16 @@ def handle_dicehelp_command(wcf: Wcf, msg: WxMsg) -> None:
 def load_jrrp_cache():
     """加载jrrp缓存文件"""
     global jrrp_cache, jrrp_queried
-    today = datetime.now().strftime('%Y-%m-%d')
     
     try:
-        # 确保logs目录存在
-        os.makedirs(os.path.dirname(JRRP_CACHE_FILE), exist_ok=True)
+        # 从缓存管理器加载数据
+        cache_data = cache_manager.load_broadcast_history('jrrp')
         
-        # 检查缓存文件是否存在
-        if os.path.exists(JRRP_CACHE_FILE):
-            with open(JRRP_CACHE_FILE, 'r', encoding='utf-8') as f:
-                cache_data = json.load(f)
-                
-                # 检查缓存数据的日期是否是今天
-                if cache_data.get('date') == today:
-                    jrrp_cache = {tuple(k.split('|')): v for k, v in cache_data.get('cache', {}).items()}
-                    jrrp_queried = {tuple(k.split('|')): v for k, v in cache_data.get('queried', {}).items()}
-                    logger.info(f"成功加载今日({today})jrrp缓存，已有{len(jrrp_queried)}条记录")
-                else:
-                    # 如果不是今天的数据，创建新的空缓存
-                    jrrp_cache = {}
-                    jrrp_queried = {}
-                    logger.info(f"缓存日期({cache_data.get('date')})不是今天({today})，已重置jrrp缓存")
-                    save_jrrp_cache()
-        else:
-            # 如果文件不存在，创建新的空缓存
-            jrrp_cache = {}
-            jrrp_queried = {}
-            logger.info("jrrp缓存文件不存在，已创建新缓存")
-            save_jrrp_cache()
+        # 转换缓存数据格式
+        jrrp_cache = {tuple(k.split('|')): v for k, v in cache_data.get('cache', {}).items()}
+        jrrp_queried = {tuple(k.split('|')): v for k, v in cache_data.get('queried', {}).items()}
+        
+        logger.info(f"成功加载jrrp缓存，已有{len(jrrp_queried)}条记录")
     except Exception as e:
         logger.error(f"加载jrrp缓存出错: {e}", exc_info=True)
         # 出错时使用空缓存
@@ -176,21 +165,14 @@ def load_jrrp_cache():
 def save_jrrp_cache():
     """保存jrrp缓存到文件"""
     try:
-        today = datetime.now().strftime('%Y-%m-%d')
-        
-        # 确保logs目录存在
-        os.makedirs(os.path.dirname(JRRP_CACHE_FILE), exist_ok=True)
-        
         # 将缓存数据转换为可JSON序列化的格式
         cache_data = {
-            'date': today,
             'cache': {f"{k[0]}|{k[1]}": v for k, v in jrrp_cache.items()},
             'queried': {f"{k[0]}|{k[1]}": v for k, v in jrrp_queried.items()}
         }
         
-        with open(JRRP_CACHE_FILE, 'w', encoding='utf-8') as f:
-            json.dump(cache_data, f, ensure_ascii=False, indent=2)
-            
+        # 保存到缓存管理器
+        cache_manager.save_broadcast_history('jrrp', cache_data)
         logger.debug(f"已保存jrrp缓存，共{len(jrrp_queried)}条记录")
     except Exception as e:
         logger.error(f"保存jrrp缓存出错: {e}", exc_info=True)
@@ -389,6 +371,7 @@ def flatten_deck(deck: dict) -> list:
 def load_deck(deck_name: str, config: dict) -> list:
     """加载指定的牌堆"""
     try:
+        # 检查缓存
         if deck_name in deck_cache:
             logger.debug(f"使用缓存的牌堆: {deck_name}")
             return deck_cache[deck_name]
@@ -444,6 +427,32 @@ def load_deck(deck_name: str, config: dict) -> list:
     except Exception as e:
         logger.error(f"加载牌堆出错: {e}", exc_info=True)
         return []
+
+def load_deck_cache():
+    """加载牌堆缓存"""
+    global deck_cache
+    
+    try:
+        # 从缓存管理器加载牌堆缓存
+        cache_data = cache_manager.load_broadcast_history('decks')
+        deck_cache = cache_data.get('decks', {})
+        logger.info(f"成功加载牌堆缓存，已有{len(deck_cache)}个牌堆")
+    except Exception as e:
+        logger.error(f"加载牌堆缓存出错: {e}", exc_info=True)
+        # 出错时使用空缓存
+        deck_cache = {}
+
+def save_deck_cache():
+    """保存牌堆缓存"""
+    try:
+        # 保存到缓存管理器
+        cache_data = {
+            'decks': deck_cache
+        }
+        cache_manager.save_broadcast_history('decks', cache_data)
+        logger.debug(f"已保存牌堆缓存，共{len(deck_cache)}个牌堆")
+    except Exception as e:
+        logger.error(f"保存牌堆缓存出错: {e}", exc_info=True)
 
 def draw_cards(deck: list, count: int = 1) -> Tuple[list, int]:
     """从牌堆中抽取指定数量的卡牌"""

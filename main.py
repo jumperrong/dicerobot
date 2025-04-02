@@ -8,7 +8,7 @@ from wcferry import Wcf
 from robot import handle_message, CommandHandler
 from log_manager import LogManager
 import asyncio
-from moyu_calendar import MoyuCalendarService
+from moyu_calendar import MoyuCalendar
 
 logger = logging.getLogger(__name__)
 
@@ -247,7 +247,7 @@ def main():
             loop.create_task(handler.qwen.weather_service.start_weather_report(handler.qwen.weather_service.check_and_broadcast))
         
         # 初始化摸鱼日历服务
-        moyu_service = MoyuCalendarService(config)
+        moyu_service = MoyuCalendar(config)
         moyu_service.wcf = wcf
         # 启动摸鱼日历服务
         if moyu_service.enabled:
