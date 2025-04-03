@@ -12,9 +12,9 @@ ai:
     # 群聊配置
     group_chat:
       enabled_rooms:  # 启用AI功能的群聊ID列表
+      - 52124509585@chatroom
       - 56168799809@chatroom
       - 52275509390@chatroom
-      - 52124509585@chatroom
     logging:
       show_messages: true  # 是否显示消息日志
       file:

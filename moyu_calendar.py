@@ -86,11 +86,15 @@ class MoyuCalendar:
         # 缓存过期天数，默认7天
         self.cache_expiry_days = self.config.get('cache_expiry_days', 7)
         
+        # 缓存清理时间（凌晨2点）
+        self.cleanup_hour = 2
+        self.cleanup_minute = 0
+        
+        # 上次缓存清理时间
+        self.last_cleanup_time = None
+        
         # wcf实例，用于发送消息
         self.wcf = None
-        
-        # 清理旧缓存图片
-        self._cleanup_old_cache_files()
         
         # 检查缓存目录中是否已存在今日图片
         self._check_existing_image()
@@ -102,6 +106,7 @@ class MoyuCalendar:
             logger.info(f"已配置群聊: {len(self.enabled_rooms)}个")
             logger.info(f"缓存图片保留天数: {self.cache_expiry_days}天")
             logger.info(f"缓存目录: {self.cache_dir}")
+            logger.info(f"缓存清理时间: {self.cleanup_hour:02d}:{self.cleanup_minute:02d}")
             
         # 标记为已初始化
         self._initialized = True
@@ -119,13 +124,17 @@ class MoyuCalendar:
         return {}
 
     def _save_broadcast_history(self) -> None:
-        """保存播报历史记录到文件"""
+        """保存播报历史到缓存文件"""
         try:
-            with open(self.broadcast_history_file, 'w', encoding='utf-8') as f:
-                json.dump(self.broadcast_history, f)
-            logger.debug("已保存播报历史记录到文件")
+            # 添加日期信息，确保与cache_manager格式兼容
+            broadcast_data = {
+                'date': datetime.now().strftime('%Y-%m-%d'),
+                **self.broadcast_history
+            }
+            cache_manager.save_broadcast_history('moyu', broadcast_data)
+            logger.debug("已保存摸鱼日历播报历史")
         except Exception as e:
-            logger.error(f"保存播报历史记录失败: {e}")
+            logger.error(f"保存摸鱼日历播报历史出错: {e}")
     
     async def _make_request(self, url: str, params: dict = None) -> Optional[dict]:
         """发送HTTP请求并获取响应"""
@@ -256,15 +265,36 @@ class MoyuCalendar:
             self._save_broadcast_history()
             logger.info(f"已清理{len(keys_to_delete)}条过期播报记录")
     
+    def _should_cleanup_now(self) -> bool:
+        """检查是否应该执行缓存清理"""
+        now = datetime.now()
+        
+        # 检查是否是指定的清理时间
+        is_cleanup_time = (now.hour == self.cleanup_hour and now.minute == self.cleanup_minute)
+        
+        # 如果已经记录了上次清理时间，检查是否已经过了24小时
+        if self.last_cleanup_time:
+            time_diff = now - self.last_cleanup_time
+            # 如果距离上次清理不到23小时，则不清理
+            if time_diff.total_seconds() < 23 * 60 * 60:
+                return False
+        
+        return is_cleanup_time
+    
     def _cleanup_old_cache_files(self) -> None:
         """清理旧的缓存图片文件"""
-        cache_manager.cleanup_old_files('moyu', self.cache_expiry_days)
+        try:
+            # 记录清理时间
+            self.last_cleanup_time = datetime.now()
+            
+            # 执行清理
+            cache_manager.cleanup_old_files('moyu', self.cache_expiry_days)
+            logger.info(f"在{self.last_cleanup_time.strftime('%Y-%m-%d %H:%M:%S')}完成了摸鱼日历缓存清理")
+        except Exception as e:
+            logger.error(f"清理缓存文件出错: {e}")
     
     async def download_moyu_calendar_image(self) -> Tuple[bool, str, str]:
         """下载摸鱼日历图片，返回 (是否成功, 图片路径, 图片URL)"""
-        # 先清理旧缓存文件
-        self._cleanup_old_cache_files()
-        
         # 如果今天已经下载过，直接返回缓存
         if self._is_cache_file_valid():
             logger.info(f"使用已缓存的摸鱼日历图片: {self.cached_image_path}")
@@ -287,6 +317,12 @@ class MoyuCalendar:
                 logger.error("摸鱼日历图片URL为空")
                 return False, "", ""
             
+            # 检查图片URL是否与昨天相同
+            if self._is_same_as_yesterday(image_url):
+                logger.warning("今日图片URL与昨天相同，需要稍后重试下载")
+                # 返回特殊状态，表示图片相同需要稍后重试
+                return False, "SAME_AS_YESTERDAY", image_url
+            
             # 设置图片保存路径
             image_dir = cache_manager.get_image_cache_dir('moyu')
             if not image_dir:
@@ -297,7 +333,7 @@ class MoyuCalendar:
             
             # 添加重试机制
             retry_count = 3
-            retry_delays = [5, 10, 20]  # 递增的延迟时间（秒）
+            retry_delays = [5, 10, 20]
             
             for attempt in range(retry_count):
                 try:
@@ -366,41 +402,131 @@ class MoyuCalendar:
             # 保留已获取的image_url，即使异常也返回URL
             return False, "", image_url
     
-    async def broadcast_moyu_calendar(self, room_ids: List[str]) -> None:
-        """广播摸鱼日历到指定群聊"""
+    async def broadcast_moyu_calendar(self, room_ids: List[str] = None) -> None:
+        """播报摸鱼日历"""
         try:
-            if not self.wcf:
-                logger.error("WCF实例未设置，无法发送消息")
+            logger.debug("开始执行摸鱼日历播报函数")
+            
+            # 检查缓存是否有效
+            if not self._is_cache_file_valid():
+                # 尝试下载
+                logger.debug("缓存无效，尝试下载图片")
+                success, image_path, image_url = await self.download_moyu_calendar_image()
+                if not success:
+                    logger.error("播报摸鱼日历失败，无法获取图片")
+                    return
+            else:
+                image_path = self.cached_image_path
+                image_url = self.cached_image_url
+                logger.debug(f"使用缓存图片: {image_path}")
+            
+            # 确认图片路径有效
+            if not image_path or not os.path.exists(image_path):
+                logger.error(f"摸鱼日历图片路径无效: {image_path}")
                 return
-            
-            # 确保图片已下载
-            success, image_file, image_url = await self.download_moyu_calendar_image()
-            
-            # 发送消息到每个群
-            for room_id in room_ids:
-                try:
-                    # 发送文本消息
-                    self.wcf.send_text(f"【摸鱼日历】今天是{datetime.now().strftime('%Y年%m月%d日')}，工作日要注意摸鱼哦~", room_id)
-                    logger.info(f"文本消息已发送到群 {room_id}")
-                    
-                    # 如果成功下载了图片，发送图片
-                    if success and os.path.exists(image_file):
-                        # 发送图片
-                        logger.info(f"正在向群 {room_id} 发送图片: {image_file}")
-                        self.wcf.send_image(image_file, room_id)
-                        logger.info(f"图片已发送到群 {room_id}")
-                    else:
-                        # 发送图片链接作为备用
-                        if image_url:
-                            self.wcf.send_text(f"摸鱼日历图片获取失败，请查看: {image_url}", room_id)
-                        else:
-                            self.wcf.send_text("摸鱼日历图片获取失败", room_id)
-                except Exception as e:
-                    logger.error(f"向群 {room_id} 发送消息失败: {e}", exc_info=True)
-            
-            # 标记已播报
-            self._mark_as_broadcasted()
                 
+            logger.debug(f"图片路径有效，大小: {os.path.getsize(image_path)} 字节")
+            
+            # 使用指定群聊列表或默认群聊列表
+            target_rooms = room_ids if room_ids else self.enabled_rooms
+            
+            # 如果没有群聊，跳过播报
+            if not target_rooms:
+                logger.warning("没有配置播报群聊，跳过摸鱼日历播报")
+                return
+                
+            logger.debug(f"准备向 {len(target_rooms)} 个群聊发送摸鱼日历")
+            
+            # 确保已经设置wcf
+            if not self.wcf:
+                logger.error("未设置WCF实例，无法发送消息")
+                return
+                
+            # 准备文字消息
+            today = datetime.now().strftime('%Y年%m月%d日')
+            weekday_cn = ["一", "二", "三", "四", "五", "六", "日"][datetime.now().weekday()]
+            msg = f"【摸鱼日历】今天是{today}，星期{weekday_cn}，工作日要注意摸鱼哦~"
+            logger.debug(f"准备发送文字消息: {msg}")
+            
+            # 记录尝试发送的群聊数
+            attempt_count = 0
+            
+            # 发送消息到各个群聊
+            for room_id in target_rooms:
+                try:
+                    attempt_count += 1
+                    logger.debug(f"开始处理群聊 #{attempt_count}: {room_id}")
+                    
+                    # 首先发送文字消息
+                    logger.debug(f"正在向群聊 {room_id} 发送文字消息")
+                    
+                    try:
+                        text_result = self.wcf.send_text(msg, room_id)
+                        logger.debug(f"文字消息调用完成，返回值: {text_result}")
+                        
+                        if text_result == 0:  # 0表示成功
+                            logger.info(f"文字消息已成功发送到群聊: {room_id}")
+                        else:  # 非0表示失败
+                            logger.warning(f"文字消息API返回失败(返回值: {text_result})，但可能实际已发送: {room_id}")
+                    except Exception as e:
+                        logger.error(f"发送文字消息时发生异常: {room_id}, {e}", exc_info=True)
+                    
+                    # 短暂延迟，避免消息发送过快
+                    await asyncio.sleep(0.5)
+                    logger.debug(f"延迟0.5秒后继续")
+                    
+                    # 然后发送图片
+                    logger.debug(f"正在向群聊 {room_id} 发送图片: {image_path}")
+                    
+                    try:
+                        img_result = self.wcf.send_image(image_path, room_id)
+                        logger.debug(f"图片发送调用完成，返回值: {img_result}")
+                        
+                        if img_result == 0:  # 0表示成功
+                            logger.info(f"图片已成功发送到群聊: {room_id}")
+                        else:  # 非0表示失败
+                            logger.warning(f"图片发送API返回失败(返回值: {img_result})，但可能实际已发送: {room_id}")
+                    except Exception as e:
+                        logger.error(f"发送图片时发生异常: {room_id}, {e}", exc_info=True)
+                    
+                except Exception as e:
+                    logger.error(f"处理群聊时出错: {room_id}, {e}", exc_info=True)
+                
+                # 群聊之间增加短暂延迟
+                await asyncio.sleep(0.5)
+            
+            # 只要尝试过发送到群聊，无论WeChatFerry返回成功与否，都标记为已播报
+            if attempt_count > 0:
+                logger.info(f"已尝试向{attempt_count}个群聊发送摸鱼日历")
+                
+                # 标记为已播报
+                self._mark_as_broadcasted()
+                
+                # 保存URL记录用于后续比较
+                today_key = datetime.now().strftime('%Y%m%d')
+                self.broadcast_history[f"url_{today_key}"] = image_url
+                
+                # 保存缓存
+                self._save_broadcast_history()
+                logger.debug("已保存广播历史记录")
+                
+                # 备份保存确保成功
+                try:
+                    broadcast_data = {
+                        'date': datetime.now().strftime('%Y-%m-%d'),
+                        **self.broadcast_history
+                    }
+                    cache_manager.save_broadcast_history('moyu', broadcast_data)
+                    logger.info(f"摸鱼日历播报记录已保存 (备份储存)")
+                    
+                    # 验证缓存文件存在
+                    if os.path.exists(self.broadcast_history_file):
+                        logger.info(f"确认缓存文件已创建: {self.broadcast_history_file}")
+                    else:
+                        logger.warning(f"缓存文件未找到: {self.broadcast_history_file}")
+                except Exception as e:
+                    logger.error(f"备份保存播报记录失败: {e}", exc_info=True)
+            
         except Exception as e:
             logger.error(f"播报摸鱼日历出错: {e}", exc_info=True)
     
@@ -432,34 +558,26 @@ class MoyuCalendar:
     async def check_and_broadcast(self, room_ids: List[str] = None) -> None:
         """检查并播报摸鱼日历"""
         try:
-            # 如果功能未启用，直接返回
+            # 如果服务未启用，直接返回
             if not self.enabled:
                 return
-            
-            # 如果没有指定群聊，使用配置中的群聊
-            if not room_ids:
-                room_ids = list(self.enabled_rooms)
-            
-            # 如果没有可播报的群聊，直接返回
-            if not room_ids:
-                return
-            
-            # 检查是否已经播报过
+                
+            # 如果今日已经播报过，直接返回
             if self._is_already_broadcasted():
                 return
-            
-            # 检查当前时间
+                
+            # 获取当前时间
             now = datetime.now()
             
-            # 首先检查缓存图片是否存在且有效
-            cache_valid = self._is_cache_file_valid()
-            
-            # 计算当前时间距离目标播报时间的分钟数
+            # 计算距离播报时间的差距（分钟）
             target_time = now.replace(hour=self.broadcast_hour, minute=self.broadcast_minute, second=0, microsecond=0)
             time_diff_minutes = (target_time - now).total_seconds() / 60
             
-            # 如果当前时间在7点之后，且还没到播报时间或在最大推迟时间内
-            if (now.hour >= 7 and time_diff_minutes > -self.max_delay_minutes and 
+            # 检查缓存是否有效
+            cache_valid = self._is_cache_file_valid()
+            
+            # 如果当前时间在8点之后，且还没到播报时间或在最大推迟时间内
+            if (now.hour >= 8 and time_diff_minutes > -self.max_delay_minutes and 
                 (time_diff_minutes > 0 or not cache_valid)):  # 如果还没到播报时间或没有有效缓存
                 
                 # 每10分钟尝试一次
@@ -476,7 +594,13 @@ class MoyuCalendar:
                         return
                     
                     logger.info(f"尝试在{now.hour:02d}:{now.minute:02d}预下载摸鱼日历图片")
-                    success, _, _ = await self.download_moyu_calendar_image()
+                    success, result, image_url = await self.download_moyu_calendar_image()
+                    
+                    # 检查是否因为图片与昨天相同而需要推迟
+                    if not success and result == "SAME_AS_YESTERDAY":
+                        logger.warning("检测到图片与昨天相同，将在10分钟后重试下载")
+                        return
+                        
                     if success:
                         logger.info("预下载摸鱼日历图片成功，准备进行播报")
                     else:
@@ -515,9 +639,28 @@ class MoyuCalendar:
                 
                 # 尝试最后一次下载
                 logger.info("播报时间已到，进行最后一次下载尝试")
-                success, _, _ = await self.download_moyu_calendar_image()
+                success, result, image_url = await self.download_moyu_calendar_image()
+                
+                # 检查是否因为图片与昨天相同而需要推迟
+                if not success and result == "SAME_AS_YESTERDAY":
+                    if -time_diff_minutes < self.max_delay_minutes:
+                        logger.warning("检测到图片与昨天相同，推迟到下一个10分钟整点继续尝试")
+                        return
+                    else:
+                        logger.warning("已达到最大推迟时间，但图片仍与昨天相同或无法下载")
+                        # 发送文本提示消息
+                        await self._send_missing_image_notification(room_ids)
+                        return
+                
+                # 如果下载失败但没有达到最大推迟时间，继续等待
                 if not success and -time_diff_minutes < self.max_delay_minutes:
                     logger.info(f"下载失败，推迟到下一个10分钟整点继续尝试（最多推迟{self.max_delay_minutes}分钟）")
+                    return
+                
+                # 如果下载失败且已达到最大推迟时间，发送文本提示消息
+                if not success:
+                    logger.warning("已达到最大推迟时间，但未能成功下载图片")
+                    await self._send_missing_image_notification(room_ids)
                     return
             
             # 播报摸鱼日历
@@ -526,6 +669,47 @@ class MoyuCalendar:
             
         except Exception as e:
             logger.error(f"检查并播报摸鱼日历出错: {e}")
+            
+    async def _send_missing_image_notification(self, room_ids: List[str] = None) -> None:
+        """当图片丢失时发送文本通知"""
+        try:
+            # 确保已经设置wcf
+            if not self.wcf:
+                logger.error("未设置WCF实例，无法发送消息")
+                return
+                
+            # 使用指定群聊列表或默认群聊列表
+            target_rooms = room_ids if room_ids else self.enabled_rooms
+            
+            # 如果没有群聊，跳过播报
+            if not target_rooms:
+                logger.warning("没有配置播报群聊，跳过摸鱼日历通知")
+                return
+                
+            # 准备通知消息
+            message = "摸鱼日历图片丢失，今日适度摸鱼！"
+            
+            # 发送消息到各个群聊
+            sent_count = 0
+            for room_id in target_rooms:
+                try:
+                    result = self.wcf.send_text(message, room_id)
+                    if result == 0:  # 0表示成功
+                        sent_count += 1
+                        logger.info(f"已成功发送摸鱼日历通知到群聊: {room_id}")
+                    else:  # 非0表示失败
+                        logger.error(f"发送摸鱼日历通知到群聊API返回失败: {room_id}, 返回值: {result}")
+                except Exception as e:
+                    logger.error(f"发送摸鱼日历通知到群聊出错: {room_id}, {e}")
+                    
+            # 标记为已播报
+            if sent_count > 0:
+                self._mark_as_broadcasted()
+                self._save_broadcast_history()
+                logger.info(f"摸鱼日历通知已发送至{sent_count}个群聊")
+                
+        except Exception as e:
+            logger.error(f"发送摸鱼日历通知出错: {e}")
     
     async def start_moyu_calendar_service(self) -> None:
         """启动摸鱼日历服务"""
@@ -538,6 +722,47 @@ class MoyuCalendar:
         # 服务启动时，先检查缓存是否已存在
         if self._is_cache_file_valid():
             logger.info("检测到已缓存的今日摸鱼日历图片，无需重新下载")
+            
+            # 检查当前时间是否已经超过了播报时间
+            now = datetime.now()
+            target_time = now.replace(hour=self.broadcast_hour, minute=self.broadcast_minute, second=0, microsecond=0)
+            time_diff_minutes = (target_time - now).total_seconds() / 60
+            
+            # 检查是否已经播报过的逻辑，增加对文件的直接检查
+            already_broadcasted = self._is_already_broadcasted()
+            
+            # 如果内存中的广播记录为空，尝试直接从文件读取
+            if not already_broadcasted and os.path.exists(self.broadcast_history_file):
+                try:
+                    with open(self.broadcast_history_file, 'r', encoding='utf-8') as f:
+                        file_history = json.load(f)
+                    
+                    # 检查文件中是否包含今天的日期
+                    today_key = self._get_broadcast_key()
+                    if today_key in file_history:
+                        logger.info(f"从文件中检测到今日已经播报过，跳过播报")
+                        
+                        # 更新内存中的播报历史记录
+                        self.broadcast_history[today_key] = file_history[today_key]
+                        
+                        # 标记为已播报
+                        already_broadcasted = True
+                except Exception as e:
+                    logger.error(f"检查播报历史文件出错: {e}")
+            
+            # 如果当前时间已经超过播报时间，且没有播报过，立即尝试播报
+            if time_diff_minutes <= 0 and not already_broadcasted:
+                # 检查是否是工作日
+                is_work_day = await self.is_workday()
+                if is_work_day:
+                    logger.info("当前时间已超过播报时间，准备立即播报")
+                    # 稍微延迟一下以让系统完全初始化
+                    await asyncio.sleep(5)
+                    await self.broadcast_moyu_calendar()
+                else:
+                    logger.info("今日不是工作日，不播报摸鱼日历")
+                    # 标记为已播报以避免重复检查
+                    self._mark_as_broadcasted()
         else:
             # 缓存不存在或无效，检查今日是否工作日并提前下载图片
             logger.info("未检测到有效的缓存图片，将检查今日是否工作日并尝试下载")
@@ -547,6 +772,11 @@ class MoyuCalendar:
             try:
                 # 检查并播报摸鱼日历
                 await self.check_and_broadcast()
+                
+                # 检查是否需要清理缓存
+                if self._should_cleanup_now():
+                    logger.info("开始执行定时缓存清理...")
+                    self._cleanup_old_cache_files()
                 
                 # 每分钟检查一次
                 await asyncio.sleep(60)
@@ -601,4 +831,99 @@ class MoyuCalendar:
             
         except Exception as e:
             logger.error(f"下载图片失败: {e}")
+            return None
+
+    def _is_same_as_yesterday(self, image_url: str) -> bool:
+        """检查图片URL是否与昨天的相同
+        
+        通过比较URL中的文件名来判断
+        """
+        try:
+            # 获取昨天的日期
+            yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y%m%d')
+            
+            # 获取图片缓存目录
+            image_dir = cache_manager.get_image_cache_dir('moyu')
+            if not image_dir:
+                return False
+                
+            # 昨天的缓存文件路径
+            yesterday_file = os.path.join(image_dir, f"moyu_{yesterday}.jpg")
+            
+            # 如果昨天的缓存文件不存在，直接返回False
+            if not os.path.exists(yesterday_file):
+                return False
+                
+            # 获取历史记录
+            history = cache_manager.load_broadcast_history('moyu')
+            yesterday_url = history.get(f"url_{yesterday}")
+            
+            # 如果没有历史URL记录，尝试从URL中提取文件名
+            if not yesterday_url:
+                logger.debug("没有找到昨天的图片URL记录，将从当前URL中提取文件名进行比较")
+                
+                # 从当前URL中提取文件名
+                current_filename = self._extract_filename_from_url(image_url)
+                if not current_filename:
+                    return False
+                    
+                # 读取昨天的缓存文件，比较大小和其他特征
+                logger.debug(f"昨天的缓存文件: {yesterday_file}")
+                logger.debug(f"当前图片URL: {image_url}")
+                return False  # 由于没有历史URL，无法确定是否相同，所以返回False
+            
+            # 比较URL中的文件名
+            current_filename = self._extract_filename_from_url(image_url)
+            yesterday_filename = self._extract_filename_from_url(yesterday_url)
+            
+            if current_filename and yesterday_filename:
+                logger.debug(f"当前图片文件名: {current_filename}, 昨天图片文件名: {yesterday_filename}")
+                
+                # 如果文件名相同，可能是同一张图片
+                is_same = current_filename == yesterday_filename
+                if is_same:
+                    logger.warning(f"检测到今天图片URL中的文件名 ({current_filename}) 与昨天相同!")
+                return is_same
+            
+            # 如果无法提取文件名，直接比较URL
+            is_same = image_url == yesterday_url
+            if is_same:
+                logger.warning(f"检测到今天图片URL ({image_url}) 与昨天相同!")
+            return is_same
+            
+        except Exception as e:
+            logger.error(f"比较图片URL出错: {e}")
+            return False
+    
+    def _extract_filename_from_url(self, url: str) -> Optional[str]:
+        """从URL中提取文件名，只返回扩展名前的部分"""
+        try:
+            if not url:
+                return None
+                
+            # 对URL进行分割，提取文件名部分
+            import urllib.parse
+            parsed_url = urllib.parse.urlparse(url)
+            path = parsed_url.path
+            
+            # 从路径中获取文件名
+            filename = os.path.basename(path)
+            
+            # 如果文件名为空，使用完整路径的最后部分
+            if not filename and path:
+                parts = path.rstrip('/').split('/')
+                if parts:
+                    filename = parts[-1]
+            
+            # 只保留扩展名前的部分
+            if filename:
+                # 分割文件名，保留基本名称（不含扩展名）
+                basename = os.path.splitext(filename)[0]
+                logger.debug(f"从URL中提取的基本文件名: {basename}")
+                return basename
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"从URL中提取文件名出错: {e}")
             return None 
