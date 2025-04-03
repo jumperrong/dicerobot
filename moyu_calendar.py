@@ -543,10 +543,29 @@ class MoyuCalendar:
             
             if is_work_day:
                 logger.info("今日是工作日，开始提前下载摸鱼日历图片")
-                success, _, _ = await self.download_moyu_calendar_image()
+                success, image_path, image_url = await self.download_moyu_calendar_image()
+                
                 if success:
-                    logger.info("摸鱼日历图片已提前下载完成，等待播报时间")
-                return True
+                    # 获取当前时间
+                    now = datetime.now()
+                    target_time = now.replace(hour=self.broadcast_hour, minute=self.broadcast_minute, second=0, microsecond=0)
+                    time_diff_minutes = (target_time - now).total_seconds() / 60
+                    
+                    # 如果已经超过播报时间，且没有播报过，立即播报
+                    if time_diff_minutes <= 0 and not self._is_already_broadcasted():
+                        logger.info("当前时间已超过播报时间，图片下载成功，准备立即播报")
+                        # 稍微延迟一下以让系统完全初始化
+                        await asyncio.sleep(3)
+                        await self.broadcast_moyu_calendar()
+                        return True
+                    else:
+                        logger.info("摸鱼日历图片已提前下载完成，等待播报时间")
+                        if self._is_already_broadcasted():
+                            logger.info("今日已经播报过，不会重复播报")
+                        return True
+                else:
+                    logger.warning("摸鱼日历图片下载失败，将在稍后重试")
+                    return False
             else:
                 logger.info("今日不是工作日，不需要下载摸鱼日历图片")
                 return False
