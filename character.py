@@ -555,7 +555,9 @@ class CharacterManager:
         """格式化检定结果"""
         # 为不同结果选择图标
         icon = "🎲"
-        if result == "大失败":
+        if result == "超级大失败":
+            icon = "☠️"
+        elif result == "大失败":
             icon = "💥"
         elif result == "失败":
             icon = "❌"
@@ -567,6 +569,8 @@ class CharacterManager:
             icon = "🌟"
         elif result == "大成功":
             icon = "🌈"
+        elif result == "超级大成功":
+            icon = "🏆"
             
         # 格式化输出
         return (
@@ -579,20 +583,36 @@ class CharacterManager:
 
     def _judge_roll(self, roll: int, skill_value: int) -> str:
         """根据掷骰结果和技能值判断成功等级"""
-        if roll == 1:
+        # 1.超级大成功
+        if (roll == 1 and roll <= skill_value) or (roll <= skill_value/100 and roll <= 5):
+            return "超级大成功"
+        
+        # 2.大成功
+        if ((2 <= roll <= 5) and roll <= skill_value) or (roll <= skill_value/20 and roll <= 25):
             return "大成功"
-        elif roll <= skill_value / 5:
+        
+        # 3.极难成功
+        if roll <= skill_value/5:
             return "极难成功"
-        elif roll <= skill_value / 2:
+        
+        # 4.困难成功
+        if roll <= skill_value/2:
             return "困难成功"
-        elif roll <= skill_value:
+        
+        # 5.成功
+        if roll <= skill_value:
             return "成功"
-        elif roll >= 96 and skill_value < 50:
+        
+        # 8.超级大失败
+        if roll == 100:
+            return "超级大失败"
+        
+        # 7.大失败
+        if 96 <= roll <= 99 and roll > skill_value:
             return "大失败"
-        elif roll >= 100:
-            return "大失败"
-        else:
-            return "失败"
+        
+        # 6.失败
+        return "失败"
 
     def _calculate_skill_value(self, skill: dict) -> int:
         """计算技能值"""
