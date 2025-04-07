@@ -956,6 +956,18 @@ def handle_message(wcf: Wcf, msg: WxMsg, config: dict, dnd_data: dict) -> None:
             chat_type = "私聊" if is_private else "群聊"
             logger.debug(f"[{chat_type}] [{msg_type_desc}] {sender_name}: {log_content}")
 
+        # 处理好友请求消息
+        if msg.type == 37 or msg.type == 40:  # 好友确认消息
+            handle_friend_request(wcf, msg, config)
+            return
+        
+        # 处理好友添加成功后的系统消息
+        if msg.type == 10000:  # 系统消息
+            # 匹配"你已添加了XXX，现在可以开始聊天了。"的消息
+            if "你已添加了" in msg.content and "，现在可以开始聊天了" in msg.content:
+                handle_new_friend_added(wcf, msg, config)
+                return
+
         # 处理命令消息
         if msg.type == 1:
             handler = CommandHandler(config)
@@ -1098,4 +1110,75 @@ def wait_for_file(file_path: str, max_retries: int = 20, delay: float = 0.5) -> 
         logger.debug(f"等待文件下载，尝试 {i+1}/{max_retries}")
         time.sleep(delay)
     return False
+
+def handle_friend_request(wcf: Wcf, msg: WxMsg, config: dict) -> None:
+    """处理好友请求"""
+    try:
+        # 解析XML内容以获取验证消息
+        xml_str = msg.content
+        
+        try:
+            # 尝试解析XML
+            xml = ET.fromstring(xml_str)
+            
+            # 从XML中提取必要信息
+            encryptusername = xml.get("encryptusername")
+            ticket = xml.get("ticket")
+            scene = int(xml.get("scene", "0"))
+            
+            # 获取验证消息内容
+            # <msg ... content="验证消息" ...>
+            verify_content = xml.get("content")
+            
+            # 记录详细日志以便调试
+            logger.info(f"收到好友请求 - 验证内容: {verify_content}")
+            logger.info(f"好友请求详情 - encryptusername: {encryptusername}, ticket: {ticket}, scene: {scene}")
+            
+            # 获取配置中的口令
+            friend_config = config.get('friend_request', {})
+            pass_phrase = friend_config.get('pass_phrase', "")
+            auto_accept = friend_config.get('auto_accept', False)
+            
+            # 判断是否自动通过
+            if auto_accept and (not pass_phrase or verify_content == pass_phrase):
+                if encryptusername and ticket:
+                    # 通过好友请求
+                    wcf.accept_new_friend(encryptusername, ticket, scene)
+                    logger.info(f"自动通过好友请求成功，验证内容: {verify_content}")
+                else:
+                    logger.error("缺少必要信息，无法通过好友请求")
+            else:
+                if not auto_accept:
+                    logger.info("自动通过好友请求功能未启用")
+                elif pass_phrase and verify_content != pass_phrase:
+                    logger.info(f"验证消息 \"{verify_content}\" 不匹配口令 \"{pass_phrase}\"，已忽略好友请求")
+                
+        except Exception as e:
+            logger.error(f"解析好友请求XML失败: {e}", exc_info=True)
+            logger.debug(f"原始内容: {xml_str[:100]}...")  # 仅打印前100个字符避免日志过长
+    
+    except Exception as e:
+        logger.error(f"处理好友请求出错: {e}", exc_info=True)
+
+def handle_new_friend_added(wcf: Wcf, msg: WxMsg, config: dict) -> None:
+    """处理新好友添加成功消息"""
+    try:
+        # 匹配新好友昵称
+        nickname_match = re.findall(r"你已添加了(.*)，现在可以开始聊天了", msg.content)
+        if nickname_match:
+            nickname = nickname_match[0]
+            
+            # 获取配置
+            friend_config = config.get('friend_request', {})
+            greeting = friend_config.get('greeting', f"你好 {nickname}，我是骰子机器人，可以使用 .help 查看指令帮助。")
+            
+            # 替换昵称变量
+            greeting = greeting.replace("{nickname}", nickname)
+            
+            # 发送欢迎消息
+            wcf.send_text(greeting, msg.sender)
+            logger.info(f"已向新好友 {nickname} 发送欢迎消息")
+    
+    except Exception as e:
+        logger.error(f"处理新好友消息出错: {e}", exc_info=True)
         

@@ -204,6 +204,14 @@ ai:
         interval: 10
 ```
 
+### 好友请求配置
+```yaml
+friend_request:
+  auto_accept: true            # 是否自动通过好友请求
+  pass_phrase: "骰子机器人"    # 验证口令，匹配时自动通过，为空则全部通过
+  greeting: "你好 {nickname}，我是骰子机器人，可以使用 .help 查看指令帮助。"  # 欢迎消息，{nickname}会被替换为新好友昵称
+```
+
 ### 牌堆配置
 ```yaml
 decks:

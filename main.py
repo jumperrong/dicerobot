@@ -143,6 +143,28 @@ def load_config() -> dict:
         else:
             logger.info("摸鱼日历功能: 已禁用")
         
+        # 好友请求配置
+        friend_config = config.get('friend_request', {})
+        logger.info("\n=== 好友请求配置 ===")
+        auto_accept = friend_config.get('auto_accept', False)
+        pass_phrase = friend_config.get('pass_phrase', '')
+        
+        if auto_accept:
+            logger.info("自动通过好友请求: 已启用")
+            if pass_phrase:
+                logger.info(f"• 验证口令: \"{pass_phrase}\"")
+                logger.info("• 注意: 只有验证信息匹配口令时才会自动通过")
+            else:
+                logger.info("• 验证口令: 未设置 (将自动通过所有好友请求)")
+                
+            greeting = friend_config.get('greeting', '')
+            if greeting:
+                logger.info(f"• 欢迎消息: \"{greeting}\"")
+            else:
+                logger.warning("• 欢迎消息: 未设置")
+        else:
+            logger.info("自动通过好友请求: 已禁用")
+        
         # 牌堆配置
         logger.info("\n=== 牌堆配置 ===")
         decks_config = config.get('decks', {})

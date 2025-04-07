@@ -51,12 +51,6 @@ def get_user_display_name(wcf: Wcf, wxid: str, room_id: str = None) -> str:
                 logger.debug(f"使用微信昵称: {friend['name']}")
                 return friend['name']
         
-        # 如果是群成员
-        for groupid, group_users in wcf.group_users.items():
-            if group_users.get(wxid) is not None:
-                logger.debug(f"使用群成员昵称: {group_users[wxid]}")
-                return group_users[wxid]
-        
         logger.debug("无法获取用户名称，使用默认")
         return "骰子手"
         
