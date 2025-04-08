@@ -150,6 +150,20 @@ class Database:
         )
         ''')
 
+        # 角色战斗数据表
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS character_combat (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            character_id INTEGER NOT NULL,
+            damage_bonus TEXT,
+            spirit_bonus TEXT,
+            build TEXT,
+            armor TEXT,
+            other_combat_data TEXT,
+            FOREIGN KEY (character_id) REFERENCES characters(id)
+        )
+        ''')
+
         # 角色使用状态表
         cursor.execute('''
         CREATE TABLE IF NOT EXISTS character_usage (
@@ -424,6 +438,25 @@ class Database:
                         ))
                 logger.debug("武器数据保存完成")
             
+            # 7.5 保存战斗数据
+            if 'combat' in char_data:
+                logger.debug("开始保存战斗数据")
+                cursor.execute('DELETE FROM character_combat WHERE character_id = ?', (character_id,))
+                combat = char_data['combat']
+                cursor.execute('''
+                INSERT INTO character_combat (
+                    character_id, damage_bonus, spirit_bonus, build, armor, other_combat_data
+                ) VALUES (?, ?, ?, ?, ?, ?)
+                ''', (
+                    character_id,
+                    combat.get('damageBonus', ''),
+                    combat.get('spiritBonus', ''),
+                    combat.get('build', ''),
+                    combat.get('armor', ''),
+                    json.dumps(combat)  # 存储完整的combat数据作为JSON
+                ))
+                logger.debug("战斗数据保存完成")
+            
             # 8. 保存笔记数据
             if 'notes' in char_data:
                 logger.debug("开始保存笔记数据")
@@ -456,50 +489,134 @@ class Database:
         try:
             cursor = self.connection.cursor()
             
+            # 获取基本字段
             cursor.execute('''
-            SELECT age, gender, residence, birthplace, str, con, siz, dex, app, int, pow, edu, luc, san, hp, mp, mov, build, db, status, items, notes, weapons, combat, custom_skills
+            SELECT 
+                c.id, c.char_name, c.player_name, c.occupation, c.age, 
+                c.gender, c.residence, c.birthplace, c.era,
+                ca.str, ca.con, ca.siz, ca.dex, ca.app, ca.int, ca.pow, ca.edu, ca.luc, ca.san, ca.hp, ca.mp
             FROM characters c
-            JOIN character_attributes a ON c.id = a.character_id
-            JOIN character_status s ON c.id = s.character_id
-            JOIN character_items i ON c.id = i.character_id
-            JOIN character_notes n ON c.id = n.character_id
-            JOIN character_weapons w ON c.id = w.character_id
+            LEFT JOIN character_attributes ca ON c.id = ca.character_id
             WHERE c.char_name = ?
             ''', (char_name,))
             
-            result = cursor.fetchone()
-            if not result:
+            basic_result = cursor.fetchone()
+            if not basic_result:
                 return None
+                
+            character_id = basic_result[0]
+            
+            # 获取状态数据
+            cursor.execute('''
+            SELECT category, type, value 
+            FROM character_status 
+            WHERE character_id = ?
+            ''', (character_id,))
+            status_rows = cursor.fetchall()
+            status_data = self._format_status_data(status_rows)
+            
+            # 获取物品数据
+            cursor.execute('''
+            SELECT item_name, type, description 
+            FROM character_items 
+            WHERE character_id = ?
+            ''', (character_id,))
+            items_rows = cursor.fetchall()
+            items_data = [{'name': row[0], 'type': row[1], 'note': row[2]} for row in items_rows]
+            
+            # 获取武器数据
+            cursor.execute('''
+            SELECT weapon_name, damage, features 
+            FROM character_weapons 
+            WHERE character_id = ?
+            ''', (character_id,))
+            weapons_rows = cursor.fetchall()
+            weapons_data = [{'name': row[0], 'damage': row[1], 'features': row[2]} for row in weapons_rows if row[0]]
+            
+            # 获取笔记数据
+            cursor.execute('''
+            SELECT title, content 
+            FROM character_notes 
+            WHERE character_id = ?
+            ''', (character_id,))
+            notes_rows = cursor.fetchall()
+            notes_data = [{'name': row[0], 'note': row[1]} for row in notes_rows]
+            
+            # 获取自定义技能
+            cursor.execute('''
+            SELECT skill_name, base, occupation, interest, growth
+            FROM character_skills
+            WHERE character_id = ? AND is_custom = 1
+            ''', (character_id,))
+            custom_skills_rows = cursor.fetchall()
+            custom_skills = []
+            for row in custom_skills_rows:
+                custom_skills.append({
+                    'name': row[0],
+                    'base': row[1],
+                    'occupation': row[2],
+                    'interest': row[3],
+                    'growth': row[4]
+                })
+            
+            # 获取战斗数据
+            cursor.execute('''
+            SELECT damage_bonus, spirit_bonus, build, armor, other_combat_data
+            FROM character_combat
+            WHERE character_id = ?
+            ''', (character_id,))
+            combat_row = cursor.fetchone()
+            combat_data = {}
+            
+            if combat_row:
+                combat_data = {
+                    'damageBonus': combat_row[0] or '',
+                    'spiritBonus': combat_row[1] or '',
+                    'build': combat_row[2] or '',
+                    'armor': combat_row[3] or ''
+                }
+                # 解析其他战斗数据
+                if combat_row[4]:
+                    try:
+                        additional_combat = json.loads(combat_row[4])
+                        for key, value in additional_combat.items():
+                            if key not in ['damageBonus', 'spiritBonus', 'build', 'armor']:
+                                combat_data[key] = value
+                    except:
+                        pass
             
             # 构建角色卡数据
             return {
-                'age': result[0],
-                'gender': result[1],
-                'residence': result[2],
-                'birthplace': result[3],
-                'attributes': {
-                    'str': result[4],
-                    'con': result[5],
-                    'siz': result[6],
-                    'dex': result[7],
-                    'app': result[8],
-                    'int': result[9],
-                    'pow': result[10],
-                    'edu': result[11],
-                    'luc': result[12],
-                    'san': result[13],
-                    'hp': result[14],
-                    'mp': result[15],
-                    'mov': result[16],
-                    'build': result[17],
-                    'db': result[18]
+                'basic': {
+                    'characterName': basic_result[1],
+                    'playerName': basic_result[2],
+                    'occupation': basic_result[3],
+                    'age': basic_result[4],
+                    'gender': basic_result[5], 
+                    'residence': basic_result[6],
+                    'birthplace': basic_result[7],
+                    'era': basic_result[8]
                 },
-                'status': json.loads(result[19]),
-                'items': json.loads(result[20]),
-                'notes': json.loads(result[21]),
-                'weapons': json.loads(result[22]),
-                'combat': json.loads(result[23]),
-                'customSkills': json.loads(result[24])
+                'attributes': {
+                    'str': str(basic_result[9] or 0),
+                    'con': str(basic_result[10] or 0),
+                    'siz': str(basic_result[11] or 0),
+                    'dex': str(basic_result[12] or 0),
+                    'app': str(basic_result[13] or 0),
+                    'int': str(basic_result[14] or 0),
+                    'pow': str(basic_result[15] or 0),
+                    'edu': str(basic_result[16] or 0),
+                    'luc': str(basic_result[17] or 0),
+                    'san': str(basic_result[18] or 0),
+                    'hp': str(basic_result[19] or 0),
+                    'mp': str(basic_result[20] or 0)
+                },
+                'status': status_data,
+                'items': items_data,
+                'notes': notes_data,
+                'weapons': weapons_data,
+                'combat': combat_data,
+                'customSkills': custom_skills
             }
             
         except Exception as e:
@@ -574,6 +691,33 @@ class Database:
             ''', (character_id,))
             weapons_data = cursor.fetchall()
             
+            # 获取战斗数据
+            cursor.execute('''
+            SELECT damage_bonus, spirit_bonus, build, armor, other_combat_data
+            FROM character_combat
+            WHERE character_id = ?
+            ''', (character_id,))
+            combat_data = cursor.fetchone()
+            combat_info = {}
+            
+            if combat_data:
+                combat_info = {
+                    'damageBonus': combat_data[0] or '',
+                    'spiritBonus': combat_data[1] or '',
+                    'build': combat_data[2] or '',
+                    'armor': combat_data[3] or ''
+                }
+                # 如果有更多战斗数据，从JSON中解析
+                if combat_data[4]:
+                    try:
+                        additional_combat = json.loads(combat_data[4])
+                        # 更新combat_info，保留所有额外的字段
+                        for key, value in additional_combat.items():
+                            if key not in ['damageBonus', 'spiritBonus', 'build', 'armor']:
+                                combat_info[key] = value
+                    except:
+                        pass
+            
             # 构造返回数据
             return {
                 'basic': {
@@ -611,7 +755,8 @@ class Database:
                     'name': weapon[0],
                     'damage': weapon[1],
                     'features': weapon[2]
-                } for weapon in weapons_data if weapon[0]]
+                } for weapon in weapons_data if weapon[0]],
+                'combat': combat_info
             }
             
         except Exception as e:

@@ -233,7 +233,66 @@ class CharacterManager:
             
             # 状态值
             result.append("\n❤️ 状态值：")
-            result.append(f"生命值(HP): {attrs.get('hp', '?')} | 魔法值(MP): {attrs.get('mp', '?')} | 理智值(SAN): {attrs.get('san', '?')}")
+            
+            # 获取status中的当前值、最大值和起始值
+            status = char_info.get('status', {})
+            
+            # 处理生命值
+            health_current = status.get('health', {}).get('current', '?')
+            health_max = status.get('health', {}).get('max', '?')
+            health_temp = status.get('health', {}).get('temp', '')
+            
+            # 处理魔法值
+            magic_current = status.get('magic', {}).get('current', '?')
+            magic_max = status.get('magic', {}).get('max', '?')
+            magic_temp = status.get('magic', {}).get('temp', '')
+            
+            # 处理理智值
+            sanity_current = status.get('sanity', {}).get('current', '?')
+            sanity_start = status.get('sanity', {}).get('start', '?')
+            sanity_max = status.get('sanity', {}).get('max', '?')
+            
+            # 如果current为空但有其他值，则使用其他值
+            if not health_current or health_current == '?':
+                health_current = health_max
+            if not magic_current or magic_current == '?':
+                magic_current = magic_max
+            if not sanity_current or sanity_current == '?':
+                sanity_current = sanity_start or sanity_max
+            
+            # 显示状态值
+            health_display = f"{health_current}/{health_max}"
+            magic_display = f"{magic_current}/{magic_max}"
+            sanity_display = f"{sanity_current}/{sanity_max}"
+            
+            result.append(f"生命值(HP): {health_display} | 魔法值(MP): {magic_display} | 理智值(SAN): {sanity_display}")
+            
+            # 添加临时生命值和临时魔法值
+            temp_values = []
+            if health_temp and health_temp != '0':
+                temp_values.append(f"临时生命值: {health_temp}")
+            if magic_temp and magic_temp != '0':
+                temp_values.append(f"临时魔法值: {magic_temp}")
+            
+            if temp_values:
+                result.append(" | ".join(temp_values))
+            
+            # 添加战斗信息
+            if 'combat' in char_info and char_info['combat']:
+                combat = char_info['combat']
+                combat_info_parts = []
+                
+                if combat.get('damageBonus'):
+                    combat_info_parts.append(f"伤害加值: {combat['damageBonus']}")
+                if combat.get('spiritBonus'):
+                    combat_info_parts.append(f"精神加值: {combat['spiritBonus']}")
+                if combat.get('build'):
+                    combat_info_parts.append(f"体型: {combat['build']}")
+                if combat.get('armor'):
+                    combat_info_parts.append(f"护甲: {combat['armor']}")
+                
+                if combat_info_parts:
+                    result.append(f"\n⚔️ 战斗数据：{' | '.join(combat_info_parts)}")
             
             # 成长点数
             result.append(f"\n📈 剩余成长点数: {growth_points}")
