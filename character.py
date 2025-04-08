@@ -197,22 +197,33 @@ class CharacterManager:
             # 构建显示信息
             result = [f"🎭 角色卡：{char_name}"]
             
-            # 基本信息
+            # 基本信息（更紧凑显示）
             result.append("\n📝 基本信息：")
+            basic_info_parts = []
             if basic.get('playerName'):
-                result.append(f"👤 玩家: {basic['playerName']}")
+                basic_info_parts.append(f"👤 玩家: {basic['playerName']}")
             if basic.get('occupation'):
-                result.append(f"💼 职业: {basic['occupation']}")
+                basic_info_parts.append(f"💼 职业: {basic['occupation']}")
             if basic.get('age'):
-                result.append(f"🗓️ 年龄: {basic['age']}")
+                basic_info_parts.append(f"🗓️ 年龄: {basic['age']}")
             if basic.get('gender'):
-                result.append(f"⚧️ 性别: {basic['gender']}")
+                basic_info_parts.append(f"⚧️ 性别: {basic['gender']}")
+            
+            # 第一行基本信息
+            if basic_info_parts:
+                result.append(" | ".join(basic_info_parts))
+            
+            # 第二行基本信息
+            location_info_parts = []
             if basic.get('residence'):
-                result.append(f"🏠 居住地: {basic['residence']}")
+                location_info_parts.append(f"🏠 居住地: {basic['residence']}")
             if basic.get('birthplace'):
-                result.append(f"🏞️ 出生地: {basic['birthplace']}")
+                location_info_parts.append(f"🏞️ 出生地: {basic['birthplace']}")
             if basic.get('era'):
-                result.append(f"📅 时代: {basic['era']}")
+                location_info_parts.append(f"📅 时代: {basic['era']}")
+            
+            if location_info_parts:
+                result.append(" | ".join(location_info_parts))
             
             # 属性值
             result.append("\n💪 属性值：")
@@ -232,6 +243,45 @@ class CharacterManager:
                 normal_skills = len(skills.get('skillsList', []))
                 custom_skills = len(skills.get('customSkills', []))
                 result.append(f"\n🎯 技能数量: {normal_skills + custom_skills} (常规: {normal_skills}, 自定义: {custom_skills})")
+                
+                # 添加职业、兴趣、成长值非零的技能列表
+                special_skills = []
+                
+                # 处理常规技能
+                for skill in skills.get('skillsList', []):
+                    skill_name = skill['name']
+                    if skill.get('subtype'):
+                        skill_name = f"{skill_name}:{skill.get('subtype')}"
+                    
+                    # 计算总技能值
+                    base = int(skill.get('base', '0') or '0')
+                    occupation = int(skill.get('occupation', '0') or '0')
+                    interest = int(skill.get('interest', '0') or '0')
+                    growth = int(skill.get('growth', '0') or '0')
+                    total = base + occupation + interest + growth
+                    
+                    # 添加到相应的列表
+                    if occupation > 0 or interest > 0 or growth > 0:
+                        special_skills.append(f"{skill_name}: {total}")
+                
+                # 处理自定义技能
+                for skill in skills.get('customSkills', []):
+                    skill_name = skill['name']
+                    
+                    # 计算总技能值
+                    base = int(skill.get('base', '0') or '0')
+                    occupation = int(skill.get('occupation', '0') or '0')
+                    interest = int(skill.get('interest', '0') or '0')
+                    growth = int(skill.get('growth', '0') or '0')
+                    total = base + occupation + interest + growth
+                    
+                    # 添加到相应的列表
+                    if occupation > 0 or interest > 0 or growth > 0:
+                        special_skills.append(f"{skill_name}: {total}")
+                
+                # 添加到结果列表
+                if special_skills:
+                    result.append(f"\n🎮 技能列表: {' | '.join(special_skills)}")
             
             return "\n".join(result)
             
