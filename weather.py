@@ -27,7 +27,7 @@ class WeatherService:
         self.enabled_rooms = set()  # 已启用的群聊列表
         self._cache_modified = False  # 缓存是否被修改
         self._last_save_time = None  # 上次保存时间
-        self._save_interval = 60  # 保存间隔（秒）
+        self._save_interval = 300  # 保存间隔（秒），改为5分钟
         
         # 从配置中获取已启用的群聊
         if 'group_chat' in config:
@@ -39,18 +39,19 @@ class WeatherService:
             self.daily_report.get('broadcast_times', [])
         )
         
-        # 加载播报历史记录
-        self.broadcast_history = cache_manager.load_broadcast_history('weather')
+        # 加载缓存数据(同时用于播报历史和预警缓存)
+        cache_data = cache_manager.load_broadcast_history('weather')
+        # 设置播报历史
+        self.broadcast_history = cache_data
+        # 设置预警缓存
+        self.warning_cache = cache_data.get('warnings', {})
+        logger.debug(f"已加载预警缓存: {len(self.warning_cache)} 条记录")
         
         # 验证配置
         if not self.api_key:
             logger.error("未配置天气API密钥")
         if not self.api_urls:
             logger.error("未配置天气API地址")
-        
-        # 初始化预警缓存
-        self.warning_cache = {}  # 预警信息缓存
-        self._load_warning_cache()  # 加载预警缓存
         
         # 添加重试配置
         self.retry_count = config.get('retry', {}).get('count', 3)
@@ -826,14 +827,8 @@ class WeatherService:
     
     def _load_warning_cache(self) -> None:
         """加载预警缓存"""
-        try:
-            # 从缓存管理器加载预警缓存
-            cache_data = cache_manager.load_broadcast_history('weather')
-            self.warning_cache = cache_data.get('warnings', {})
-            logger.debug(f"已加载预警缓存: {len(self.warning_cache)} 条记录")
-        except Exception as e:
-            logger.error(f"加载预警缓存失败: {e}")
-            self.warning_cache = {}
+        # 此方法被保留仅为兼容性，实际加载已在__init__中完成
+        pass
     
     def _save_warning_cache(self) -> None:
         """保存预警缓存"""
