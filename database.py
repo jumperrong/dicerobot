@@ -43,185 +43,221 @@ class Database:
         return os.path.join(data_dir, 'characters.db')
     
     def _init_db(self):
-        """初始化数据库表"""
-        cursor = self.connection.cursor()
-        
-        # 角色基础信息表
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS characters (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            char_name TEXT NOT NULL UNIQUE,
-            player_name TEXT,
-            occupation TEXT,
-            age TEXT,
-            gender TEXT,
-            residence TEXT,
-            birthplace TEXT,
-            era TEXT,                    
-            is_partner BOOLEAN,          
-            growth_points INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        ''')
+        """初始化数据库表结构"""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                # 创建角色表
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS characters (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        char_name TEXT UNIQUE,
+                        data TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+                
+                # 创建角色状态表
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS character_status (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        character_id INTEGER,
+                        user_id TEXT,
+                        room_id TEXT,
+                        status TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (character_id) REFERENCES characters (id),
+                        UNIQUE(user_id, room_id)
+                    )
+                ''')
+                
+                # 创建角色操作历史表
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS character_operation_history (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        character_name TEXT,
+                        user_id TEXT,
+                        action TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+                
+                # 创建角色成长历史表
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS character_growth_history (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        character_name TEXT,
+                        user_id TEXT,
+                        action TEXT,
+                        field_name TEXT,
+                        old_value TEXT,
+                        new_value TEXT,
+                        points_used INTEGER,
+                        check_roll TEXT,
+                        growth_roll TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
+                
+                # 创建成长点数表
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS growth_points (
+                        character_name TEXT PRIMARY KEY,
+                        points INTEGER DEFAULT 0
+                    )
+                ''')
+                
+                # 创建角色基础信息表
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS character_basic (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        character_id INTEGER NOT NULL,
+                        characterName TEXT NOT NULL,
+                        playerName TEXT,
+                        occupation TEXT,
+                        age TEXT,
+                        gender TEXT,
+                        residence TEXT,
+                        birthplace TEXT,
+                        era TEXT,
+                        is_partner BOOLEAN DEFAULT 0,
+                        FOREIGN KEY (character_id) REFERENCES characters(id)
+                    )
+                ''')
+                
+                # 创建角色属性表
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS character_attributes (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        character_id INTEGER NOT NULL,
+                        str INTEGER,
+                        con INTEGER,
+                        siz INTEGER,
+                        dex INTEGER,
+                        app INTEGER,
+                        int INTEGER,
+                        pow INTEGER,
+                        edu INTEGER,
+                        luc INTEGER,
+                        FOREIGN KEY (character_id) REFERENCES characters(id)
+                    )
+                ''')
+                
+                # 创建角色技能表
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS character_skills (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        character_id INTEGER NOT NULL,
+                        skill_name TEXT NOT NULL,
+                        base INTEGER,
+                        occupation INTEGER,
+                        interest INTEGER,
+                        growth INTEGER,
+                        is_custom BOOLEAN DEFAULT 0,
+                        subtype TEXT,
+                        FOREIGN KEY (character_id) REFERENCES characters(id),
+                        UNIQUE(character_id, skill_name, subtype)
+                    )
+                ''')
+                
+                # 创建角色状态值表
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS character_status_values (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        character_id INTEGER NOT NULL,
+                        category TEXT NOT NULL,
+                        type TEXT NOT NULL,
+                        value TEXT,
+                        FOREIGN KEY (character_id) REFERENCES characters(id)
+                    )
+                ''')
+                
+                # 创建角色物品表
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS character_items (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        character_id INTEGER NOT NULL,
+                        item_name TEXT NOT NULL,
+                        type TEXT,
+                        description TEXT,
+                        FOREIGN KEY (character_id) REFERENCES characters(id)
+                    )
+                ''')
+                
+                # 创建角色武器表
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS character_weapons (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        character_id INTEGER NOT NULL,
+                        weapon_name TEXT NOT NULL,
+                        damage TEXT,
+                        feature TEXT,
+                        FOREIGN KEY (character_id) REFERENCES characters(id)
+                    )
+                ''')
+                
+                # 创建角色笔记表
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS character_notes (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        character_id INTEGER NOT NULL,
+                        title TEXT NOT NULL,
+                        content TEXT,
+                        type TEXT,
+                        FOREIGN KEY (character_id) REFERENCES characters(id)
+                    )
+                ''')
+                
+                # 创建角色战斗数据表
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS character_combat (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        character_id INTEGER NOT NULL,
+                        damage_bonus TEXT,
+                        spirit_bonus TEXT,
+                        build TEXT,
+                        armor TEXT,
+                        other_combat_data TEXT,
+                        FOREIGN KEY (character_id) REFERENCES characters(id)
+                    )
+                ''')
+                
+                # 创建角色使用状态表
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS character_usage (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id TEXT NOT NULL,
+                        character_id INTEGER NOT NULL,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        FOREIGN KEY (character_id) REFERENCES characters(id)
+                    )
+                ''')
+                
+                # 检查 character_growth_history 表是否已存在 check_roll 和 growth_roll 列
+                cursor.execute("PRAGMA table_info(character_growth_history)")
+                columns = [column[1] for column in cursor.fetchall()]
+                
+                # 如果 check_roll 列不存在，添加它
+                if 'check_roll' not in columns:
+                    cursor.execute('''
+                        ALTER TABLE character_growth_history
+                        ADD COLUMN check_roll TEXT
+                    ''')
+                
+                # 如果 growth_roll 列不存在，添加它
+                if 'growth_roll' not in columns:
+                    cursor.execute('''
+                        ALTER TABLE character_growth_history
+                        ADD COLUMN growth_roll TEXT
+                    ''')
+                
+                conn.commit()
+                logger.info("数据库初始化完成")
+        except Exception as e:
+            logger.error(f"数据库初始化失败: {e}", exc_info=True)
+            raise
 
-        # 角色属性表
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS character_attributes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            character_id INTEGER NOT NULL,
-            str INTEGER,           -- 力量
-            con INTEGER,           -- 体质
-            siz INTEGER,           -- 体型
-            dex INTEGER,           -- 敏捷
-            app INTEGER,           -- 外貌
-            int INTEGER,           -- 智力
-            pow INTEGER,           -- 意志
-            edu INTEGER,           -- 教育
-            luc INTEGER,           -- 幸运（注意：JSON中是luc而不是luck）
-            san INTEGER,           -- 理智
-            hp INTEGER,            -- 生命值
-            mp INTEGER,            -- 魔法值
-            FOREIGN KEY (character_id) REFERENCES characters(id)
-        )
-        ''')
-
-        # 角色技能表
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS character_skills (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            character_id INTEGER NOT NULL,
-            skill_name TEXT NOT NULL,
-            base INTEGER,          -- 基础值
-            occupation INTEGER,     -- 职业加值
-            interest INTEGER,       -- 兴趣加值
-            growth INTEGER,        -- 成长值
-            is_custom BOOLEAN DEFAULT 0,  -- 是否为自定义技能
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- 添加更新时间字段
-            FOREIGN KEY (character_id) REFERENCES characters(id),
-            UNIQUE(character_id, skill_name)
-        )
-        ''')
-
-        # 角色状态表
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS character_status (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            character_id INTEGER NOT NULL,
-            category TEXT NOT NULL,      -- sanity/health/magic
-            type TEXT NOT NULL,         -- current/start/max/temp
-            value TEXT,
-            FOREIGN KEY (character_id) REFERENCES characters(id)
-        )
-        ''')
-
-        # 角色物品表
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS character_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            character_id INTEGER NOT NULL,
-            item_name TEXT NOT NULL,
-            type TEXT,            -- 物品类型
-            description TEXT,     -- 物品描述（note字段）
-            FOREIGN KEY (character_id) REFERENCES characters(id)
-        )
-        ''')
-
-        # 角色武器表
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS character_weapons (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            character_id INTEGER NOT NULL,
-            weapon_name TEXT NOT NULL,
-            damage TEXT,           -- 伤害
-            features TEXT,         -- 武器特性
-            FOREIGN KEY (character_id) REFERENCES characters(id)
-        )
-        ''')
-
-        # 角色笔记表
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS character_notes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            character_id INTEGER NOT NULL,
-            title TEXT NOT NULL,
-            content TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (character_id) REFERENCES characters(id)
-        )
-        ''')
-
-        # 角色战斗数据表
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS character_combat (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            character_id INTEGER NOT NULL,
-            damage_bonus TEXT,
-            spirit_bonus TEXT,
-            build TEXT,
-            armor TEXT,
-            other_combat_data TEXT,
-            FOREIGN KEY (character_id) REFERENCES characters(id)
-        )
-        ''')
-
-        # 角色使用状态表
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS character_usage (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT NOT NULL,
-            character_id INTEGER NOT NULL,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (character_id) REFERENCES characters(id)
-        )
-        ''')
-
-        # 角色操作历史表
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS character_operation_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            character_name TEXT NOT NULL,
-            user_id TEXT NOT NULL,
-            action TEXT NOT NULL,  -- create, use, release, overwrite
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        ''')
-        
-        # 角色成长历史表
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS character_growth_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            character_name TEXT NOT NULL,
-            user_id TEXT NOT NULL,
-            action TEXT NOT NULL,  -- grow, setgrow
-            field_name TEXT NOT NULL,  -- 技能名或 growth_points
-            old_value TEXT,
-            new_value TEXT,
-            points_used INTEGER,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        ''')
-
-        # 创建索引
-        # 创建角色操作历史索引
-        cursor.execute('''
-        CREATE INDEX IF NOT EXISTS idx_op_history_char_name 
-        ON character_operation_history(character_name)
-        ''')
-        
-        # 创建角色成长历史索引
-        cursor.execute('''
-        CREATE INDEX IF NOT EXISTS idx_growth_history_char_name 
-        ON character_growth_history(character_name)
-        ''')
-        
-        # 删除不再使用的character_history表
-        cursor.execute('''
-        DROP TABLE IF EXISTS character_history
-        ''')
-        logger.info("已删除不再使用的character_history表")
-        
-        self.connection.commit()
-    
     def _validate_character_data(self, char_data: dict) -> tuple[bool, str]:
         """验证角色卡数据的完整性"""
         try:
@@ -269,48 +305,67 @@ class Database:
             
             # 检查是否存在同名角色
             cursor.execute('SELECT id FROM characters WHERE char_name = ?', (char_name,))
-            old_char_ids = [row[0] for row in cursor.fetchall()]
+            existing_result = cursor.fetchone()
             
-            # 获取旧数据（如果存在）
-            old_data = None
-            if old_char_ids:
-                old_data = self.get_character_info(char_name)
+            character_id = None
+            is_update = False
             
-            # 先删除该角色名称的所有相关数据
-            for old_id in old_char_ids:
-                logger.debug(f"删除角色ID {old_id} 的所有相关数据")
-                cursor.execute('DELETE FROM character_attributes WHERE character_id = ?', (old_id,))
-                cursor.execute('DELETE FROM character_status WHERE character_id = ?', (old_id,))
-                cursor.execute('DELETE FROM character_skills WHERE character_id = ?', (old_id,))
-                cursor.execute('DELETE FROM character_items WHERE character_id = ?', (old_id,))
-                cursor.execute('DELETE FROM character_weapons WHERE character_id = ?', (old_id,))
-                cursor.execute('DELETE FROM character_notes WHERE character_id = ?', (old_id,))
+            if existing_result:
+                # 如果存在同名角色，使用现有角色ID
+                character_id = existing_result[0]
+                is_update = True
+                logger.debug(f"找到现有角色 ID: {character_id}，进行更新操作")
             
-            cursor.execute('DELETE FROM characters WHERE char_name = ?', (char_name,))
-            logger.debug(f"已删除角色「{char_name}」的所有旧数据")
-            
-            # 1. 保存基本信息
+            # 1. 保存/更新基本信息
             basic = char_data.get('basic', {})
-            cursor.execute('''
-            INSERT INTO characters (
-                char_name, player_name, occupation, age, gender, 
-                residence, birthplace, era, is_partner
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                basic.get('characterName'),
-                basic.get('playerName'),
-                basic.get('occupation'),
-                basic.get('age'),
-                basic.get('gender'),
-                basic.get('residence'),
-                basic.get('birthplace'),
-                basic.get('era'),
-                basic.get('isPartner', False)
-            ))
             
-            # 获取新插入的角色ID
-            character_id = cursor.lastrowid
-            logger.debug(f"保存基本信息完成，新角色ID: {character_id}")
+            if is_update:
+                # 更新现有角色记录
+                cursor.execute('''
+                UPDATE characters SET 
+                    player_name = ?, 
+                    occupation = ?, 
+                    age = ?, 
+                    gender = ?, 
+                    residence = ?, 
+                    birthplace = ?, 
+                    era = ?, 
+                    is_partner = ?
+                WHERE id = ?
+                ''', (
+                    basic.get('playerName'),
+                    basic.get('occupation'),
+                    basic.get('age'),
+                    basic.get('gender'),
+                    basic.get('residence'),
+                    basic.get('birthplace'),
+                    basic.get('era'),
+                    basic.get('isPartner', False),
+                    character_id
+                ))
+            else:
+                # 创建新的角色记录
+                cursor.execute('''
+                INSERT INTO characters (
+                    char_name, player_name, occupation, age, gender, 
+                    residence, birthplace, era, is_partner
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    basic.get('characterName'),
+                    basic.get('playerName'),
+                    basic.get('occupation'),
+                    basic.get('age'),
+                    basic.get('gender'),
+                    basic.get('residence'),
+                    basic.get('birthplace'),
+                    basic.get('era'),
+                    basic.get('isPartner', False)
+                ))
+                
+                # 获取新插入的角色ID
+                character_id = cursor.lastrowid
+            
+            logger.debug(f"保存基本信息完成，角色ID: {character_id}")
             
             # 2. 保存属性值
             if 'attributes' in char_data:
@@ -369,7 +424,7 @@ class Database:
                             skill_name = skill['name']
                         
                         cursor.execute('''
-                        INSERT INTO character_skills (
+                        INSERT OR REPLACE INTO character_skills (
                             character_id, skill_name, base, occupation, 
                             interest, growth, is_custom
                         ) VALUES (?, ?, ?, ?, ?, ?, 0)
@@ -388,7 +443,7 @@ class Database:
                 logger.debug("开始保存自定义技能")
                 for skill in char_data['customSkills']:
                     cursor.execute('''
-                    INSERT INTO character_skills (
+                    INSERT OR REPLACE INTO character_skills (
                         character_id, skill_name, base, occupation, 
                         interest, growth, is_custom
                     ) VALUES (?, ?, ?, ?, ?, ?, 1)
@@ -801,29 +856,60 @@ class Database:
         return "\n".join(formatted)
 
     def format_growth_history(self, history_records: list) -> str:
-        """格式化成长历史记录的展示"""
+        """格式化成长历史记录，用于展示"""
         if not history_records:
-            return "暂无成长记录"
-        
-        formatted = []
+            return "📊 没有成长历史记录"
+            
+        result = "📊 成长历史记录：\n"
         for record in history_records:
-            created_at, user_id, action, field_name, old_value, new_value, points_used = record
-            # 格式化时间
-            time_str = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M')
+            # 获取时间、用户、动作和字段
+            time_str = record['created_at']
+            user_id = record['user_id']
+            action = record['action']
+            field_name = record['field_name']
+            old_value = record['old_value']
+            new_value = record['new_value']
+            points_used = record['points_used']
+            check_roll = record['check_roll']
+            growth_roll = record['growth_roll']
             
-            # 格式化操作类型
-            if action == 'grow':
-                msg = f"{time_str} {user_id} 技能成长：{field_name} {old_value} → {new_value}"
-                if points_used:
-                    msg += f" (消耗成长点数: {points_used})"
-            elif action == 'setgrow':
-                msg = f"{time_str} {user_id} 设置成长点数：{old_value} → {new_value}"
+            # 动作图标
+            if action == "grow":
+                action_icon = "📈"
+            elif action == "setgrow":
+                action_icon = "⚙️"
             else:
-                msg = f"{time_str} {user_id} {action}: {field_name} {old_value} → {new_value}"
+                action_icon = "🔄"
+                
+            # 成长点数使用信息
+            points_info = ""
+            if points_used is not None and points_used > 0:
+                points_info = f"（消耗{points_used}点）"
+                
+            # 骰值信息
+            roll_info = ""
+            if check_roll and growth_roll:
+                roll_info = f"\n   🎲 检定：{check_roll} | 成长：{growth_roll}"
+                
+            # 成长量计算
+            growth_amount = ""
+            if old_value and new_value and action == "grow":
+                try:
+                    old_val = int(old_value)
+                    new_val = int(new_value)
+                    growth_amount = f"增长了 {new_val - old_val} 点"
+                except:
+                    growth_amount = ""
             
-            formatted.append(msg)
-        
-        return "\n".join(formatted)
+            # 格式化记录
+            if field_name == "growth_points":
+                # 成长点数变化记录
+                result += f"{action_icon} {time_str} | {user_id} 将成长点数从 {old_value} 调整为 {new_value}\n"
+            else:
+                # 技能成长记录
+                result += f"{action_icon} {time_str} | {user_id} 的 {field_name} 技能从 {old_value} 成长到 {new_value} {growth_amount} {points_info}{roll_info}\n"
+                
+        return result
 
     def get_current_character(self, user_id: str) -> Optional[tuple[int, str]]:
         """获取用户当前使用的角色"""
@@ -1163,48 +1249,125 @@ class Database:
             logger.error(f"使用技能成长次数失败: {e}")
             return False, "使用成长次数失败"
 
-    def update_skill_growth(self, char_name: str, skill_name: str, growth_value: int, user_id: str = "系统", points_used: int = 1) -> bool:
-        """更新技能成长值"""
+    def update_skill_growth(
+        self, 
+        char_name: str, 
+        skill_name: str, 
+        growth_value: int, 
+        user_id: str = "系统", 
+        points_used: int = 1,
+        check_roll: str = None,
+        growth_roll: str = None
+    ) -> bool:
+        """
+        更新技能成长值
+        
+        Args:
+            char_name: 角色名
+            skill_name: 技能名
+            growth_value: 成长值
+            user_id: 用户ID
+            points_used: 使用的成长点数
+            check_roll: 检定骰值
+            growth_roll: 成长骰值
+            
+        Returns:
+            bool: 是否更新成功
+        """
         try:
             cursor = self.connection.cursor()
             
-            # 获取技能当前各个部分的值
+            # 获取角色ID
             cursor.execute('''
-            SELECT base, occupation, interest, growth 
-            FROM character_skills 
-            WHERE character_id = (
-                SELECT id FROM characters WHERE char_name = ?
-            ) AND skill_name = ?
-            ''', (char_name, skill_name))
-            
-            result = cursor.fetchone()
-            if not result:
-                logger.error(f"未找到技能: {skill_name}")
+            SELECT id FROM characters WHERE char_name = ?
+            ''', (char_name,))
+            character_result = cursor.fetchone()
+            if not character_result:
+                logger.error(f"角色不存在: {char_name}")
                 return False
             
-            base, occupation, interest, current_growth = result
-            # 计算总值
-            base = int(base or 0)
-            occupation = int(occupation or 0)
-            interest = int(interest or 0)
-            current_growth = int(current_growth or 0)
+            character_id = character_result[0]
             
-            # 当前总值和更新后的总值
-            total_current = base + occupation + interest + current_growth
-            new_growth = current_growth + growth_value
-            total_new = base + occupation + interest + new_growth
-            
-            # 更新成长值
+            # 检查是否为普通技能
             cursor.execute('''
-            UPDATE character_skills 
-            SET growth = ? 
-            WHERE character_id = (
-                SELECT id FROM characters WHERE char_name = ?
-            ) AND skill_name = ?
-            ''', (new_growth, char_name, skill_name))
+            SELECT id, growth FROM character_skills 
+            WHERE character_id = ? AND skill_name = ?
+            ''', (character_id, skill_name))
             
+            skill_result = cursor.fetchone()
+            
+            # 如果找不到技能，尝试在自定义技能中查找
+            if not skill_result:
+                cursor.execute('''
+                SELECT id, growth FROM character_skills 
+                WHERE character_id = ? AND skill_name = ? AND is_custom = 1
+                ''', (character_id, skill_name))
+                skill_result = cursor.fetchone()
+                
+                # 如果还是找不到，尝试作为带子类型的技能查找（格式 "技能名:子类型"）
+                if not skill_result and ':' in skill_name:
+                    main_skill = skill_name.split(':', 1)[0]
+                    cursor.execute('''
+                    SELECT id, growth FROM character_skills 
+                    WHERE character_id = ? AND skill_name = ?
+                    ''', (character_id, main_skill))
+                    skill_result = cursor.fetchone()
+                
+                # 如果还是找不到，那么这个技能确实不存在
+                if not skill_result:
+                    logger.error(f"技能不存在: {skill_name}")
+                    return False
+            
+            skill_id, current_growth = skill_result
+            
+            # 如果当前growth为空，默认为0
+            if current_growth is None:
+                current_growth = 0
+            else:
+                try:
+                    current_growth = int(current_growth)
+                except ValueError:
+                    current_growth = 0
+            
+            # 计算新的growth值
+            new_growth = current_growth + growth_value
+            
+            # 直接更新技能的growth值
+            cursor.execute('''
+            UPDATE character_skills SET growth = ? WHERE id = ?
+            ''', (new_growth, skill_id))
+            
+            # 提交更改
             self.connection.commit()
-            logger.debug(f"技能 {skill_name} 成长值更新: {total_current} -> {total_new}")
+            
+            # 获取当前技能总值
+            cursor.execute('''
+            SELECT base, occupation, interest, growth FROM character_skills WHERE id = ?
+            ''', (skill_id,))
+            skill_data = cursor.fetchone()
+            
+            base = int(skill_data[0] or 0)
+            occupation = int(skill_data[1] or 0)
+            interest = int(skill_data[2] or 0)
+            growth = int(skill_data[3] or 0)
+            
+            current_skill_value = base + occupation + interest + (current_growth or 0)
+            new_skill_value = base + occupation + interest + new_growth
+            
+            # 记录成长历史
+            self.add_growth_history(
+                char_name, 
+                user_id, 
+                "grow", 
+                skill_name, 
+                str(current_skill_value), 
+                str(new_skill_value), 
+                points_used,
+                check_roll,
+                growth_roll
+            )
+            
+            logger.info(f"成功为角色 {char_name} 的技能 {skill_name} 增加成长值 {growth_value}")
             return True
             
         except Exception as e:
@@ -1244,42 +1407,72 @@ class Database:
             logger.error(f"获取角色操作历史失败: {e}", exc_info=True)
             return []
 
-    def get_character_growth_history(self, char_name: str, limit: int = 50) -> list:
-        """获取角色成长历史（技能成长、成长点数调整等）"""
+    def get_character_growth_history(self, char_name: str, limit: int = 20) -> list:
+        """获取角色成长历史记录"""
         try:
-            cursor = self.connection.cursor()
-            cursor.execute('''
-            SELECT created_at, user_id, action,
-                   field_name, old_value, new_value, points_used
-            FROM character_growth_history
-            WHERE character_name = ?
-            ORDER BY created_at DESC
-            LIMIT ?
-            ''', (char_name, limit))
-            return cursor.fetchall()
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT id, character_name, user_id, action, field_name, 
+                           old_value, new_value, points_used, check_roll, growth_roll, created_at 
+                    FROM character_growth_history 
+                    WHERE character_name = ? 
+                    ORDER BY id DESC 
+                    LIMIT ?
+                ''', (char_name, limit))
+                
+                history = cursor.fetchall()
+                result = []
+                for record in history:
+                    result.append({
+                        'id': record[0],
+                        'char_name': record[1],
+                        'user_id': record[2],
+                        'action': record[3],
+                        'field_name': record[4],
+                        'old_value': record[5],
+                        'new_value': record[6],
+                        'points_used': record[7],
+                        'check_roll': record[8],
+                        'growth_roll': record[9],
+                        'created_at': record[10]
+                    })
+                return result
+                
         except Exception as e:
-            logger.error(f"获取角色成长历史失败: {e}", exc_info=True)
+            logger.error(f"获取角色成长历史记录失败: {e}", exc_info=True)
             return []
 
     def add_growth_history(self, char_name: str, user_id: str, 
                           action: str, field_name: str, old_value: str, 
-                          new_value: str, points_used: int = None):
-        """记录角色成长历史（技能成长、成长点数调整等）"""
+                          new_value: str, points_used: int = None,
+                          check_roll: str = None, growth_roll: str = None):
+        """
+        添加角色成长历史记录
+        
+        Args:
+            char_name: 角色名
+            user_id: 用户ID
+            action: 动作描述
+            field_name: 成长的字段名
+            old_value: 旧值
+            new_value: 新值
+            points_used: 使用的成长点数
+            check_roll: 检定骰值
+            growth_roll: 成长骰值
+        """
         try:
-            cursor = self.connection.cursor()
-            # 使用Python的datetime生成当前确切时间
             current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            cursor.execute('''
-            INSERT INTO character_growth_history (
-                character_name, user_id, action,
-                field_name, old_value, new_value, points_used, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (char_name, user_id, action, 
-                  field_name, old_value, new_value, points_used, current_time))
-            self.connection.commit()
-            logger.debug(f"记录成长历史: {char_name} - {field_name}: {old_value} -> {new_value}")
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    INSERT INTO character_growth_history 
+                    (character_name, user_id, created_at, action, field_name, old_value, new_value, points_used, check_roll, growth_roll) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (char_name, user_id, current_time, action, field_name, old_value, new_value, points_used, check_roll, growth_roll))
+                conn.commit()
         except Exception as e:
-            logger.error(f"记录成长历史失败: {e}")
+            logger.error(f"添加角色成长历史记录失败: {e}", exc_info=True)
 
     @contextmanager
     def get_connection(self):

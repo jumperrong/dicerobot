@@ -400,7 +400,8 @@ class CharacterManager:
             return "获取角色卡历史失败"
 
     def show_growth_history(self, char_name: str, limit: int = 20) -> str:
-        """显示角色成长历史
+        """
+        显示角色成长历史
         
         Args:
             char_name: 角色名称
@@ -408,67 +409,30 @@ class CharacterManager:
         """
         try:
             # 获取成长历史记录，限制数量
-            history_records = self.get_growth_history(char_name, limit=limit)
+            history_records = self.db.get_character_growth_history(char_name, limit=limit)
             if not history_records:
                 return f"未找到角色 {char_name} 的成长历史"
             
             # 获取当前剩余成长次数
             current_points = self.db.get_growth_points(char_name)
             
-            result = [
-                f"📈 技能成长历史",
+            # 使用数据库函数格式化历史记录并返回
+            formatted_history = self.db.format_growth_history(history_records)
+            
+            # 在开头添加标题和当前剩余次数信息
+            header = [
                 f"👤 角色: {char_name}",
                 f"🎲 当前剩余成长点数: {current_points}",
                 f"📊 显示最近 {limit} 条记录",
                 ""
             ]
             
-            # 按日期分组显示
-            for created_at, user_id, action, field_name, old_value, new_value, points_used in history_records:
-                try:
-                    # 转换为本地时间
-                    dt = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S')
-                    # 转换为本地时间（针对UTC存储的情况）
-                    local_dt = dt.replace(tzinfo=datetime.now().astimezone().tzinfo)
-                    time_str = local_dt.strftime('%Y-%m-%d %H:%M')
-                    
-                    if action == "grow":
-                        # 技能成长记录
-                        growth = int(new_value) - int(old_value) if old_value.isdigit() and new_value.isdigit() else "?"
-                        points = points_used if points_used is not None else 1
-                        result.append(f"{time_str} {char_name} 🎯 技能成长：{field_name} {old_value} → {new_value} (消耗成长点数: {points})")
-                    elif action == "setgrow":
-                        # 成长点数调整记录
-                        if field_name == "growth_points":
-                            try:
-                                if old_value.isdigit() and new_value.isdigit():
-                                    diff = int(new_value) - int(old_value)
-                                    if diff > 0:
-                                        result.append(f"{time_str} {char_name} 📈 获得成长点数：{old_value} → {new_value} (+{diff}点)")
-                                    elif diff < 0:
-                                        result.append(f"{time_str} {char_name} 📉 减少成长点数：{old_value} → {new_value} ({diff}点)")
-                                    else:
-                                        result.append(f"{time_str} {char_name} 🔄 设置成长点数：{new_value}点")
-                                else:
-                                    # 如果不是数字，直接显示原始值
-                                    result.append(f"{time_str} {char_name} 🔄 设置成长点数：{old_value} → {new_value}")
-                            except (ValueError, TypeError):
-                                # 处理任何转换或比较异常
-                                result.append(f"{time_str} {char_name} 🔄 设置成长点数：{old_value} → {new_value}")
-                except (ValueError, TypeError) as e:
-                    logger.error(f"处理成长历史记录时间出错: {e}", exc_info=True)
-                    # 如果时间处理失败，使用原始时间字符串
-                    result.append(f"{created_at} {user_id} {action}: {field_name} {old_value} → {new_value}")
-                    continue
-            
-            if len(result) == 5:  # 只有标题和剩余次数
-                return f"角色 {char_name} 暂无成长记录"
-            
-            return "\n".join(result)
+            # 组合结果并返回
+            return "\n".join(header) + "\n" + formatted_history
             
         except Exception as e:
-            logger.error(f"显示成长历史失败: {e}")
-            return "获取成长历史失败"
+            logger.error(f"显示角色成长历史失败: {e}", exc_info=True)
+            return f"显示角色成长历史失败: {str(e)}"
 
     def show_character_status(self) -> str:
         """显示所有角色卡的使用状态"""
@@ -760,13 +724,36 @@ class CharacterManager:
             # 查找技能
             current_value = 0
             skill_found = False
+            full_skill_name = skill_name  # 记录完整的技能名（包括子类型）
             
-            # 在普通技能中查找
+            # 在普通技能中查找，添加模糊匹配
             for skill in skills_data.get('skillsList', []):
                 if not skill.get('isSubSkill'):
-                    if skill['name'].lower() == skill_name.lower() or \
-                       (skill.get('subtype') and f"{skill['name']}:{skill.get('subtype')}".lower() == skill_name.lower()):
+                    # 完全匹配
+                    if skill['name'].lower() == skill_name.lower():
                         current_value = self._calculate_skill_value(skill)
+                        full_skill_name = skill['name']
+                        skill_found = True
+                        break
+                    # 子类型完全匹配
+                    elif skill.get('subtype') and f"{skill['name']}:{skill.get('subtype')}".lower() == skill_name.lower():
+                        current_value = self._calculate_skill_value(skill)
+                        full_skill_name = f"{skill['name']}:{skill.get('subtype')}"
+                        skill_found = True
+                        break
+                    # 子类型部分匹配（如"斗殴"匹配"格斗:斗殴"）
+                    elif skill.get('subtype') and skill.get('subtype').lower() == skill_name.lower():
+                        current_value = self._calculate_skill_value(skill)
+                        full_skill_name = f"{skill['name']}:{skill.get('subtype')}"
+                        skill_found = True
+                        break
+                    # 特殊处理：斗殴
+                    elif skill_name.lower() == "斗殴" and (
+                        skill['name'].lower() == "斗殴" or 
+                        (skill['name'].lower() == "格斗" and skill.get('subtype', '').lower() == "斗殴")
+                    ):
+                        current_value = self._calculate_skill_value(skill)
+                        full_skill_name = "格斗:斗殴" if skill.get('subtype') else "斗殴"
                         skill_found = True
                         break
             
@@ -775,6 +762,7 @@ class CharacterManager:
                 for skill in skills_data.get('customSkills', []):
                     if skill['name'].lower() == skill_name.lower():
                         current_value = self._calculate_skill_value(skill)
+                        full_skill_name = skill['name']
                         skill_found = True
                         break
             
@@ -791,7 +779,12 @@ class CharacterManager:
             original_value = current_value
             points_used = grow_times  # 记录实际消耗的点数
             successful_rolls = 0  # 记录成功次数
-            rolls_history = []  # 记录所有骰子结果和成长值
+            
+            # 收集骰值信息，供显示和存储
+            check_rolls = []  # 收集检定骰值
+            growth_rolls = []  # 收集成长骰值
+            check_results = []  # 收集每次检定的结果
+            current_live_value = current_value  # 实时跟踪技能值变化
             
             # 进行多次成长检定
             for i in range(grow_times):
@@ -804,23 +797,26 @@ class CharacterManager:
                 
                 # 进行成长骰
                 roll = random.randint(1, 100)
+                check_rolls.append(str(roll))  # 记录检定骰值
                 
                 # 正常情况下，骰值需要大于当前技能值才视为成功
                 # 特殊规则：如果技能值大于95，则骰值在96-100时总能成长
-                success = roll > current_value or (current_value > 95 and roll >= 96)
+                success = roll > current_live_value or (current_live_value > 95 and roll >= 96)
                 
                 # 根据技能值确定成长骰类型
                 if success:
-                    if current_value < 30:
+                    growth_value = 0  # 初始化成长值
+                    
+                    if current_live_value < 30:
                         growth_dice = "1d10"
                         growth_base = random.randint(1, 10)
-                    elif current_value < 50:
+                    elif current_live_value < 50:
                         growth_dice = "1d8"
                         growth_base = random.randint(1, 8)
-                    elif current_value < 70:
+                    elif current_live_value < 70:
                         growth_dice = "1d6"
                         growth_base = random.randint(1, 6)
-                    elif current_value < 90:
+                    elif current_live_value < 90:
                         growth_dice = "1d4"
                         growth_base = random.randint(1, 4)
                     else:
@@ -830,94 +826,94 @@ class CharacterManager:
                     # 检查是否投出了100，获得双倍成长
                     if roll == 100:
                         # 骰值为100时，对应骰子投两次
-                        if current_value < 30:
+                        if current_live_value < 30:
                             second_roll = random.randint(1, 10)
                             growth = growth_base + second_roll
-                            roll_desc = f"大成功({roll}>{current_value}) +{growth}点 ({growth_base}+{second_roll})"
-                        elif current_value < 50:
+                            growth_rolls.append(f"{growth_dice}={growth_base}+{growth_dice}={second_roll}")
+                            roll_desc = f"✅ 大成功({roll}>{current_live_value}) +{growth}点 [{growth_dice}={growth_base}+{growth_dice}={second_roll}]"
+                        elif current_live_value < 50:
                             second_roll = random.randint(1, 8)
                             growth = growth_base + second_roll
-                            roll_desc = f"大成功({roll}>{current_value}) +{growth}点 ({growth_base}+{second_roll})"
-                        elif current_value < 70:
+                            growth_rolls.append(f"{growth_dice}={growth_base}+{growth_dice}={second_roll}")
+                            roll_desc = f"✅ 大成功({roll}>{current_live_value}) +{growth}点 [{growth_dice}={growth_base}+{growth_dice}={second_roll}]"
+                        elif current_live_value < 70:
                             second_roll = random.randint(1, 6)
                             growth = growth_base + second_roll
-                            roll_desc = f"大成功({roll}>{current_value}) +{growth}点 ({growth_base}+{second_roll})"
-                        elif current_value < 90:
+                            growth_rolls.append(f"{growth_dice}={growth_base}+{growth_dice}={second_roll}")
+                            roll_desc = f"✅ 大成功({roll}>{current_live_value}) +{growth}点 [{growth_dice}={growth_base}+{growth_dice}={second_roll}]"
+                        elif current_live_value < 90:
                             second_roll = random.randint(1, 4)
                             growth = growth_base + second_roll
-                            roll_desc = f"大成功({roll}>{current_value}) +{growth}点 ({growth_base}+{second_roll})"
+                            growth_rolls.append(f"{growth_dice}={growth_base}+{growth_dice}={second_roll}")
+                            roll_desc = f"✅ 大成功({roll}>{current_live_value}) +{growth}点 [{growth_dice}={growth_base}+{growth_dice}={second_roll}]"
                         else:
                             second_roll = random.randint(1, 3)
                             growth = growth_base + second_roll
-                            roll_desc = f"大成功({roll}>{current_value}) +{growth}点 ({growth_base}+{second_roll})"
+                            growth_rolls.append(f"{growth_dice}={growth_base}+{growth_dice}={second_roll}")
+                            roll_desc = f"✅ 大成功({roll}>{current_live_value}) +{growth}点 [{growth_dice}={growth_base}+{growth_dice}={second_roll}]"
                     # 检查特殊规则：技能值大于95，骰值在96-100时总能成长
-                    elif current_value > 95 and roll >= 96 and roll <= 99:
+                    elif current_live_value > 95 and roll >= 96 and roll <= 99:
                         growth = growth_base
-                        roll_desc = f"特殊成长({roll}≥96,技能>{95}) +{growth}点"
+                        growth_rolls.append(f"{growth_dice}={growth_base}")
+                        roll_desc = f"✅ 特殊成长({roll}≥96,技能>{95}) +{growth}点 [{growth_dice}={growth_base}]"
                     else:
                         growth = growth_base
-                        roll_desc = f"成功({roll}>{current_value}) +{growth}点"
+                        growth_rolls.append(f"{growth_dice}={growth_base}")
+                        roll_desc = f"✅ 成功({roll}>{current_live_value}) +{growth}点 [{growth_dice}={growth_base}]"
                     
-                    current_value += growth
+                    current_live_value += growth
                     total_growth += growth
                     successful_rolls += 1
-                    rolls_history.append(roll_desc)
                 else:
-                    rolls_history.append(f"失败({roll}<={current_value})")
+                    growth_rolls.append("")  # 失败时不记录成长骰
+                    roll_desc = f"❌ 失败({roll}≤{current_live_value})"
                 
-                if current_value >= 100:
-                    current_value = 100  # 技能最大值为100
+                # 记录当前检定结果
+                check_results.append(f"  #{i+1}: {roll_desc}")
+                
+                if current_live_value >= 100:
+                    current_live_value = 100  # 技能最大值为100
                     break
             
             # 更新技能成长值
             if total_growth > 0:
-                # 找到技能名的标准格式（包括可能的子类型）
-                full_skill_name = skill_name
-                for skill in skills_data.get('skillsList', []):
-                    if skill['name'].lower() == skill_name.lower() or \
-                      (skill.get('subtype') and f"{skill['name']}:{skill.get('subtype')}".lower() == skill_name.lower()):
-                        if skill.get('subtype'):
-                            full_skill_name = f"{skill['name']}:{skill.get('subtype')}"
-                        else:
-                            full_skill_name = skill['name']
-                        break
+                # 格式化骰值信息为字符串
+                check_roll_str = ", ".join(check_rolls)
+                growth_roll_str = ", ".join([roll for roll in growth_rolls if roll])  # 过滤掉空字符串
                 
                 # 更新技能成长值
-                success = self.db.update_skill_growth(char_name, full_skill_name, total_growth, user_id, points_used)
+                success = self.db.update_skill_growth(
+                    char_name, 
+                    full_skill_name, 
+                    total_growth, 
+                    user_id, 
+                    points_used,
+                    check_roll_str,
+                    growth_roll_str
+                )
+                
                 if not success:
                     return False, "更新技能成长值失败"
-                
-                # 记录成长历史
-                self.record_growth(
-                    char_name=char_name,
-                    user_id=user_id,
-                    field_name=full_skill_name,
-                    old_value=str(original_value),
-                    new_value=str(original_value + total_growth),
-                    points_used=points_used
-                )
             
             # 构建返回消息
             message = [
-                f"技能「{skill_name}」成长检定结果:",
-                f"• 初始值: {original_value}",
+                f"🎮 技能「{skill_name}」成长检定结果:",
+                f"📊 初始值: {original_value}",
+                f"🔄 消耗成长点数: {points_used}次",
+                f"📋 成功次数: {successful_rolls}/{points_used}",
             ]
             
-            # 简化输出，只显示总结果而不是每次的详细情况
-            if grow_times > 1:
-                message.append(f"• 消耗成长点数: {points_used}次")
-                if successful_rolls > 0:
-                    message.append(f"• 成功次数: {successful_rolls}/{points_used}")
-                    message.append(f"• 总成长值: +{total_growth}点")
-                else:
-                    message.append(f"• 成功次数: 0/{points_used}，未获得成长")
-            else:
-                # 单次成长，显示更详细的信息
-                if len(rolls_history) > 0:
-                    message.append(f"• {rolls_history[0]}")
+            # 添加详细结果
+            if len(check_results) > 0:
+                message.append(f"📝 详细结果:")
+                message.extend(check_results)
             
             if total_growth > 0:
-                message.append(f"• 最终值: {original_value + total_growth}")
+                message.append(f"📈 总成长值: +{total_growth}点")
+                message.append(f"🏆 最终值: {original_value + total_growth}")
+            else:
+                message.append(f"📈 总成长值: 0点，未获得成长")
+                message.append(f"🏆 最终值: {original_value}")
             
             return True, "\n".join(message)
             
@@ -1036,7 +1032,9 @@ class CharacterManager:
         field_name: str,
         old_value: str,
         new_value: str,
-        points_used: Optional[int] = None
+        points_used: Optional[int] = None,
+        check_roll: Optional[str] = None,
+        growth_roll: Optional[str] = None
     ) -> None:
         """
         记录角色成长历史
@@ -1049,9 +1047,11 @@ class CharacterManager:
             old_value (str): 变更前的值
             new_value (str): 变更后的值
             points_used (Optional[int]): 使用的成长点数
+            check_roll (Optional[str]): 检定骰值
+            growth_roll (Optional[str]): 成长骰值
         """
         try:
-            self.db.add_growth_history(char_name, user_id, action, field_name, old_value, new_value, points_used)
+            self.db.add_growth_history(char_name, user_id, action, field_name, old_value, new_value, points_used, check_roll, growth_roll)
             logger.debug(f"已记录角色成长历史: {char_name}, {action}, {field_name}, {old_value} -> {new_value}")
         except Exception as e:
             logger.error(f"记录角色成长历史失败: {e}", exc_info=True)
@@ -1095,9 +1095,41 @@ class CharacterManager:
         """记录角色操作历史的便捷方法"""
         self.add_operation_history(char_name, user_id, action)
     
-    def record_growth(self, char_name: str, user_id: str, field_name: str, old_value: str, new_value: str, points_used: Optional[int] = None) -> None:
-        """记录角色成长历史的便捷方法"""
-        self.add_growth_history(char_name, user_id, "grow", field_name, old_value, new_value, points_used)
+    def record_growth(
+        self, 
+        char_name: str, 
+        user_id: str, 
+        field_name: str, 
+        old_value: str, 
+        new_value: str, 
+        points_used: Optional[int] = None,
+        check_roll: Optional[str] = None,
+        growth_roll: Optional[str] = None
+    ) -> None:
+        """
+        记录角色成长历史的便捷方法
+        
+        Args:
+            char_name: 角色名
+            user_id: 用户ID
+            field_name: 成长的字段名 
+            old_value: 旧值
+            new_value: 新值
+            points_used: 使用的成长点数
+            check_roll: 检定骰值
+            growth_roll: 成长骰值
+        """
+        self.add_growth_history(
+            char_name, 
+            user_id, 
+            "grow", 
+            field_name, 
+            old_value, 
+            new_value, 
+            points_used,
+            check_roll,
+            growth_roll
+        )
     
     def record_growth_points_change(self, char_name: str, user_id: str, old_value: str, new_value: str) -> None:
         """记录成长点数变更的便捷方法"""
@@ -1185,7 +1217,7 @@ class CharacterManager:
     def get_active_character(self, user_id: str, room_id: Optional[str]) -> Optional[str]:
         """获取用户当前使用的角色名称"""
         try:
-            cursor = self.connection.cursor()
+            cursor = self.db.connection.cursor()
             
             # 忽略 room_id 参数，仅使用 user_id
             cursor.execute('''

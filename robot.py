@@ -750,8 +750,9 @@ AI功能控制:
             self._send_message(wcf, msg, message)
             
         except Exception as e:
-            logger.error(f"处理技能成长命令出错: {e}")
-            self._send_message(wcf, msg, "处理命令时出错，请重试")
+            logger.error(f"处理技能成长命令失败: {e}", exc_info=True)
+            self._send_message(wcf, msg, f"处理技能成长命令失败: {str(e)}")
+            return
 
     async def handle_setgrow_command(self, wcf: Wcf, msg: WxMsg, **kwargs) -> None:
         """处理设置成长次数命令"""

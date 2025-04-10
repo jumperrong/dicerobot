@@ -12,9 +12,9 @@ ai:
     # 群聊配置
     group_chat:
       enabled_rooms:  # 启用AI功能的群聊ID列表
-      - 52124509585@chatroom
-      - 52275509390@chatroom
       - 56168799809@chatroom
+      - 52275509390@chatroom
+      - 52124509585@chatroom
     logging:
       show_messages: true  # 是否显示消息日志
       file:
@@ -62,7 +62,7 @@ ai:
 
 # 摸鱼日历配置
 moyu_calendar:
-  enabled: true                # 是否启用摸鱼日历功能
+  enabled: false                # 是否启用摸鱼日历功能
   broadcast_time: "09:00"      # 播报时间(工作日)
   enabled_rooms:               # 启用摸鱼日历的群聊ID列表
   - 52275509390@chatroom
