@@ -185,7 +185,19 @@ class CommandHandler:
                 handler=self.handle_check_command,
                 needs_config=False,
                 needs_dnd_data=False,
-                description='进行技能检定'
+                description='进行技能检定\n用法: .c <技能名>'
+            ),
+            '.ca': CommandInfo(
+                handler=self.handle_advantage_check_command,
+                needs_config=False,
+                needs_dnd_data=False,
+                description='进行优势技能检定（掷两次骰，取较低值）\n用法: .ca <技能名>'
+            ),
+            '.cp': CommandInfo(
+                handler=self.handle_disadvantage_check_command,
+                needs_config=False,
+                needs_dnd_data=False,
+                description='进行劣势技能检定（掷两次骰，取较高值）\n用法: .cp <技能名>'
             ),
             '.grow': CommandInfo(
                 handler=self.handle_grow_command,
@@ -212,17 +224,32 @@ class CommandHandler:
                 description='数据库备份管理\n用法: .backup [list/restore <备份文件名>]'
             ),
         }
+        
+        # 记录已注册的命令
+        logger.debug(f"已注册的命令: {list(self.commands.keys())}")
+        logger.debug(f"检查是否注册了优势劣势命令: .ca存在={'.ca' in self.commands}, .cp存在={'.cp' in self.commands}")
     
     def get_command_info(self, command: str) -> Optional[CommandInfo]:
         """获取命令对应的处理函数参数需求"""
+        # 日志记录当前尝试匹配的命令
+        logger.debug(f"尝试匹配命令: '{command}'")
+        
         # 处理所有 .ai 开头的命令
         if command.startswith('.ai'):
+            logger.debug(f"匹配到.ai命令")
             return self.commands.get('.ai')
         
+        # 按命令前缀长度降序排序，优先匹配最长的前缀
+        sorted_cmd_prefixes = sorted(self.commands.keys(), key=len, reverse=True)
+        logger.debug(f"按长度排序的命令前缀: {sorted_cmd_prefixes}")
+        
         # 处理其他命令
-        for cmd_prefix, info in self.commands.items():
+        for cmd_prefix in sorted_cmd_prefixes:
             if command.startswith(cmd_prefix):
-                return info
+                logger.debug(f"匹配到命令前缀: '{cmd_prefix}'")
+                return self.commands[cmd_prefix]
+                
+        logger.debug(f"未找到匹配的命令")
         return None
     
     def handle_roll_command(self, wcf: Wcf, msg: WxMsg, **kwargs) -> None:
@@ -260,6 +287,8 @@ class CommandHandler:
 角色卡指令:
 • .char help    - 角色卡管理帮助
 • .c [技能名]    - 进行技能检定
+• .ca [技能名]   - 进行优势技能检定（取两次检定中较低值）
+• .cp [技能名]   - 进行劣势技能检定（取两次检定中较高值）
 • .grow [技能名] - 技能成长
 • .find [关键词] - 查找角色信息
 
@@ -406,7 +435,10 @@ AI功能控制:
   - 开启/关闭当前群聊的AI功能
   - 示例: .ai room on
 
-功能设置:
+角色卡相关:
+• .char force release <角色名>
+  - 强制释放被占用的角色卡
+  - 管理员专用命令
 • .setgrow <角色名> <点数>
   - 设置角色成长点数
   - 示例: .setgrow 川尻早人 5
@@ -656,6 +688,11 @@ AI功能控制:
 ⚠️ .char force release <角色名> - [管理员] 强制释放角色卡
 📜 .char help - 显示本帮助信息
 
+📝 技能检定命令：
+🎯 .c <技能名> - 进行技能检定
+🌟 .ca <技能名> - 进行优势技能检定（掷两次骰，取较低值）
+⚠️ .cp <技能名> - 进行劣势技能检定（掷两次骰，取较高值）
+
 ⚠️ 注意事项：
 1. 一个角色卡同时只能被一个用户使用
 2. 使用角色卡后，可以省略角色名称
@@ -674,23 +711,117 @@ AI功能控制:
     def handle_check_command(self, wcf: Wcf, msg: WxMsg, **kwargs) -> None:
         """处理技能检定命令"""
         try:
+            # 记录原始命令内容
+            logger.debug(f"标准检定-原始命令: '{msg.content}'")
+            
             # 获取技能名称
             skill_name = msg.content.split('.c', 1)[1].strip()
+            logger.debug(f"标准检定-提取的技能名: '{skill_name}'")
+            
             if not skill_name:
+                logger.debug(f"标准检定-未提取到技能名")
                 self._send_message(wcf, msg, "请指定要检定的技能，如：.c 侦查")
                 return
             
+            # 记录字符编码和长度
+            logger.debug(f"标准检定-技能名编码: {[ord(c) for c in skill_name]}")
+            logger.debug(f"标准检定-技能名长度: {len(skill_name)}")
+            
             # 调用 check_skill 方法时传递所有必需参数
+            logger.debug(f"标准检定-调用check_skill，参数: user_id={msg.sender}, room_id={msg.roomid}, skill_name='{skill_name}'")
             success, message = character_manager.check_skill(
                 user_id=msg.sender,
                 room_id=msg.roomid,
                 skill_name=skill_name
             )
+            logger.debug(f"标准检定-check_skill返回: success={success}, message长度={len(message)}")
             
             self._send_message(wcf, msg, message)
             
         except Exception as e:
-            logger.error(f"处理检定命令出错: {e}")
+            logger.error(f"处理检定命令出错: {e}", exc_info=True)
+            self._send_message(wcf, msg, "处理命令时出错，请重试")
+
+    def handle_advantage_check_command(self, wcf: Wcf, msg: WxMsg, **kwargs) -> None:
+        """处理优势技能检定命令"""
+        try:
+            # 记录原始命令内容
+            logger.debug(f"优势检定-原始命令: '{msg.content}'")
+            
+            # 使用正则表达式匹配命令
+            import re
+            match = re.match(r'\.ca\s+(.*)', msg.content)
+            logger.debug(f"优势检定-正则匹配结果: {match is not None}")
+            
+            if match and match.group(1).strip():
+                skill_name = match.group(1).strip()
+                logger.debug(f"优势检定-提取的技能名: '{skill_name}'")
+            else:
+                logger.debug(f"优势检定-未能提取技能名，match结果: {match}")
+                if match:
+                    logger.debug(f"优势检定-匹配组内容: '{match.group(1)}'")
+                self._send_message(wcf, msg, "请指定要检定的技能，如：.ca 侦查")
+                return
+            
+            # 记录字符编码和长度
+            logger.debug(f"优势检定-技能名编码: {[ord(c) for c in skill_name]}")
+            logger.debug(f"优势检定-技能名长度: {len(skill_name)}")
+            
+            # 调用 check_skill 方法时传递所有必需参数，并指定为优势检定
+            logger.debug(f"优势检定-调用check_skill，参数: user_id={msg.sender}, room_id={msg.roomid}, skill_name='{skill_name}', advantage_type='advantage'")
+            success, message = character_manager.check_skill(
+                user_id=msg.sender,
+                room_id=msg.roomid,
+                skill_name=skill_name,
+                advantage_type='advantage'
+            )
+            logger.debug(f"优势检定-check_skill返回: success={success}, message长度={len(message)}")
+            
+            self._send_message(wcf, msg, message)
+            
+        except Exception as e:
+            logger.error(f"处理优势检定命令出错: {e}", exc_info=True)
+            self._send_message(wcf, msg, "处理命令时出错，请重试")
+
+    def handle_disadvantage_check_command(self, wcf: Wcf, msg: WxMsg, **kwargs) -> None:
+        """处理劣势技能检定命令"""
+        try:
+            # 记录原始命令内容
+            logger.debug(f"劣势检定-原始命令: '{msg.content}'")
+            
+            # 使用正则表达式匹配命令
+            import re
+            match = re.match(r'\.cp\s+(.*)', msg.content)
+            logger.debug(f"劣势检定-正则匹配结果: {match is not None}")
+            
+            if match and match.group(1).strip():
+                skill_name = match.group(1).strip()
+                logger.debug(f"劣势检定-提取的技能名: '{skill_name}'")
+            else:
+                logger.debug(f"劣势检定-未能提取技能名，match结果: {match}")
+                if match:
+                    logger.debug(f"劣势检定-匹配组内容: '{match.group(1)}'")
+                self._send_message(wcf, msg, "请指定要检定的技能，如：.cp 侦查")
+                return
+                
+            # 记录字符编码和长度
+            logger.debug(f"劣势检定-技能名编码: {[ord(c) for c in skill_name]}")
+            logger.debug(f"劣势检定-技能名长度: {len(skill_name)}")
+            
+            # 调用 check_skill 方法时传递所有必需参数，并指定为劣势检定
+            logger.debug(f"劣势检定-调用check_skill，参数: user_id={msg.sender}, room_id={msg.roomid}, skill_name='{skill_name}', advantage_type='disadvantage'")
+            success, message = character_manager.check_skill(
+                user_id=msg.sender,
+                room_id=msg.roomid,
+                skill_name=skill_name,
+                advantage_type='disadvantage'
+            )
+            logger.debug(f"劣势检定-check_skill返回: success={success}, message长度={len(message)}")
+            
+            self._send_message(wcf, msg, message)
+            
+        except Exception as e:
+            logger.error(f"处理劣势检定命令出错: {e}", exc_info=True)
             self._send_message(wcf, msg, "处理命令时出错，请重试")
 
     async def handle_grow_command(self, wcf: Wcf, msg: WxMsg, **kwargs) -> None:

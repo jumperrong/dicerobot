@@ -458,18 +458,22 @@ class CharacterManager:
             logger.error(f"强制释放角色失败: {e}")
             return False, "强制释放角色失败"
 
-    def check_skill(self, skill_name: str, user_id: str, room_id: Optional[str] = None) -> tuple[bool, str]:
+    def check_skill(self, skill_name: str, user_id: str, room_id: Optional[str] = None, advantage_type: Optional[str] = None) -> tuple[bool, str]:
         """检定技能或属性 (room_id参数已弃用，仅为兼容性保留)"""
         # 获取当前使用的角色
+        logger.debug(f"检定处理-开始检定，参数: skill_name='{skill_name}', advantage_type={advantage_type}")
+        
         char_name = self.get_current_character(user_id, None)
         if not char_name:
+            logger.debug(f"检定处理-未找到当前角色")
             return False, "请先使用 .char use <角色名> 选择要使用的角色"
             
-        logger.debug(f"正在为角色「{char_name}」检定技能「{skill_name}」")
+        logger.debug(f"检定处理-为角色「{char_name}」检定技能「{skill_name}」，优势类型: {advantage_type}")
         
         # 标准化输入的技能名
+        orig_skill_name = skill_name
         skill_name = skill_name.strip().lower()
-        logger.debug(f"搜索技能名: {skill_name}")
+        logger.debug(f"检定处理-原始技能名: '{orig_skill_name}'，标准化后: '{skill_name}'")
         
         # 检查是否为属性检定
         attribute_mapping = {
@@ -520,8 +524,35 @@ class CharacterManager:
             # 获取玩家名字
             player_name = char_info['basic'].get('playerName', user_id)
             
-            # 进行检定
-            roll = random.randint(1, 100)
+            # 进行检定，考虑优势/劣势
+            if advantage_type == 'advantage' or advantage_type == 'disadvantage':
+                # 执行两次骰子，然后根据优势/劣势选择结果
+                logger.debug(f"检定处理-使用{advantage_type}检定模式")
+                roll1 = random.randint(1, 100)
+                roll2 = random.randint(1, 100)
+                logger.debug(f"检定处理-投掷两次骰子: roll1={roll1}, roll2={roll2}")
+                
+                if advantage_type == 'advantage':
+                    # 优势：取较小值
+                    roll = min(roll1, roll2)
+                    logger.debug(f"检定处理-优势检定取较小值: {roll}")
+                    marked_roll1 = f"{roll1}*" if roll1 < roll2 else f"{roll1}"
+                    marked_roll2 = f"{roll2}*" if roll2 < roll1 else f"{roll2}"
+                else:
+                    # 劣势：取较大值
+                    roll = max(roll1, roll2)
+                    logger.debug(f"检定处理-劣势检定取较大值: {roll}")
+                    marked_roll1 = f"{roll1}*" if roll1 > roll2 else f"{roll1}"
+                    marked_roll2 = f"{roll2}*" if roll2 > roll1 else f"{roll2}"
+                
+                rolls_display = f"{marked_roll1}，{marked_roll2}"
+                logger.debug(f"检定处理-最终骰子显示: '{rolls_display}'")
+            else:
+                # 普通检定
+                roll = random.randint(1, 100)
+                logger.debug(f"检定处理-普通检定骰子: {roll}")
+                rolls_display = str(roll)
+            
             success = roll <= attr_value
             logger.debug(f"属性检定结果: {roll} vs {attr_value}, {'成功' if success else '失败'}")
             
@@ -542,6 +573,7 @@ class CharacterManager:
                 skill_name=skill_name.upper() if skill_name in ["str", "con", "siz", "dex", "app", "int", "pow", "edu", "luc", "san"] else skill_name,
                 skill_value=attr_value,
                 roll=roll,
+                rolls_display=rolls_display,
                 result=result_desc
             )
             
@@ -595,8 +627,29 @@ class CharacterManager:
                 if not skill_found:
                     return False, f"未找到技能「{skill_name}」"
                 
-                # 进行技能检定
-                roll = random.randint(1, 100)
+                # 进行检定，考虑优势/劣势
+                if advantage_type == 'advantage' or advantage_type == 'disadvantage':
+                    # 执行两次骰子，然后根据优势/劣势选择结果
+                    roll1 = random.randint(1, 100)
+                    roll2 = random.randint(1, 100)
+                    
+                    if advantage_type == 'advantage':
+                        # 优势：取较小值
+                        roll = min(roll1, roll2)
+                        marked_roll1 = f"{roll1}*" if roll1 < roll2 else f"{roll1}"
+                        marked_roll2 = f"{roll2}*" if roll2 < roll1 else f"{roll2}"
+                    else:
+                        # 劣势：取较大值
+                        roll = max(roll1, roll2)
+                        marked_roll1 = f"{roll1}*" if roll1 > roll2 else f"{roll1}"
+                        marked_roll2 = f"{roll2}*" if roll2 > roll1 else f"{roll2}"
+                    
+                    rolls_display = f"{marked_roll1}，{marked_roll2}"
+                else:
+                    # 普通检定
+                    roll = random.randint(1, 100)
+                    rolls_display = str(roll)
+                
                 success = roll <= skill_value
                 logger.debug(f"技能检定结果: {roll} vs {skill_value}, {'成功' if success else '失败'}")
                 
@@ -617,6 +670,7 @@ class CharacterManager:
                     skill_name=skill_display_name,
                     skill_value=skill_value,
                     roll=roll,
+                    rolls_display=rolls_display,
                     result=result_desc
                 )
                 
@@ -624,7 +678,7 @@ class CharacterManager:
                 logger.error(f"进行技能检定时出错: {e}")
                 return False, f"检定出错: {str(e)}"
 
-    def _format_check_result(self, char_name: str, player_name: str, skill_name: str, skill_value: int, roll: int, result: str) -> str:
+    def _format_check_result(self, char_name: str, player_name: str, skill_name: str, skill_value: int, roll: int, result: str, rolls_display: str = None) -> str:
         """格式化检定结果"""
         # 为不同结果选择图标
         icon = "🎲"
@@ -645,12 +699,16 @@ class CharacterManager:
         elif result == "超级大成功":
             icon = "🏆"
             
+        # 如果没有提供rolls_display，使用roll
+        if rolls_display is None:
+            rolls_display = str(roll)
+            
         # 格式化输出
         return (
             f"{icon} 技能检定：{skill_name}\n"
             f"👤 角色：{char_name} (PL: {player_name})\n"
             f"📊 技能值：{skill_value}\n"
-            f"🎲 掷骰：{roll}\n"
+            f"🎲 掷骰：{rolls_display}\n"
             f"📝 结果：{result}"
         )
 
@@ -935,6 +993,8 @@ class CharacterManager:
 
 📝 技能检定命令：
 🎯 .c <技能名> - 进行技能检定（需先使用角色）
+🌟 .ca <技能名> - 进行优势技能检定（掷两次骰，取较低值）
+⚠️ .cp <技能名> - 进行劣势技能检定（掷两次骰，取较高值）
 
 📈 技能成长命令：
 🎲 .grow <技能名> [次数] - 进行技能成长检定，可指定次数
