@@ -26,6 +26,7 @@ import time
 import random
 import re
 import aiohttp
+from moyu_calendar import MoyuCalendar
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,7 @@ class CommandHandler:
         if not hasattr(self, 'initialized'):
             self.commands: Dict[str, CommandInfo] = {}
             self.qwen = None
+            self.moyu_service = None
             self.waiting_for_character_file = {}  # Dict[str, Optional[str]]  # user_id -> room_id
             self._register_commands()
             self.initialized = True
@@ -100,6 +102,11 @@ class CommandHandler:
             if weather_config:
                 weather_service = WeatherService(weather_config)
                 self.qwen.set_weather_service(weather_service)
+            
+            # 初始化摸鱼日历服务
+            moyu_config = config.get('moyu_calendar', {})
+            if moyu_config:
+                self.moyu_service = MoyuCalendar(config)
             
         except Exception as e:
             logger.error(f"初始化 AI 功能出错: {e}")
@@ -410,6 +417,12 @@ AI功能控制:
 • .setgrow <角色名> <点数>
   - 设置角色成长点数
   - 示例: .setgrow 川尻早人 5
+
+摸鱼日历:
+• 配置文件中可设置:
+  - 开启/关闭摸鱼日历功能
+  - 设置播报时间
+  - 设置播报群聊列表
 
 数据库备份:
 • .backup

@@ -8,6 +8,7 @@ from wcferry import Wcf
 from robot import handle_message, CommandHandler
 from log_manager import LogManager
 import asyncio
+from moyu_calendar import MoyuCalendar
 
 logger = logging.getLogger(__name__)
 
@@ -122,6 +123,26 @@ def load_config() -> dict:
         else:
             logger.info("天气预警: 已禁用")
         
+        # 摸鱼日历配置
+        moyu_config = config.get('moyu_calendar', {})
+        logger.info("\n=== 摸鱼日历配置 ===")
+        if moyu_config.get('enabled', False):
+            logger.info("摸鱼日历功能: 已启用")
+            logger.info(f"• 播报时间: {moyu_config.get('broadcast_time', '08:00')}")
+            moyu_rooms = moyu_config.get('enabled_rooms', [])
+            if moyu_rooms:
+                logger.info(f"• 已配置群聊: {len(moyu_rooms)}个")
+                for room_id in moyu_rooms:
+                    try:
+                        group_name = wcf.get_room_name(room_id) or room_id
+                        logger.info(f"  - {group_name} ({room_id})")
+                    except:
+                        logger.info(f"  - {room_id}")
+            else:
+                logger.warning("• 未配置播报群聊")
+        else:
+            logger.info("摸鱼日历功能: 已禁用")
+        
         # 好友请求配置
         friend_config = config.get('friend_request', {})
         logger.info("\n=== 好友请求配置 ===")
@@ -195,6 +216,7 @@ def main():
     logger.info("正在启动骰子机器人...")
     
     handler = None  # 声明handler变量以便在finally中使用
+    moyu_service = None  # 声明摸鱼日历服务变量
     
     try:
         # 加载DND数据
@@ -233,24 +255,91 @@ def main():
             return
         
         # 创建事件循环
-        loop = asyncio.get_event_loop()
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
         
-        # 启动微信消息监听
-        loop.create_task(listen_wx_msg(wcf, config, dnd_data))
+        # 初始化天气调度器
+        if handler.qwen.weather_service:
+            # 设置天气服务的wcf实例
+            handler.qwen.weather_service.wcf = wcf
+            # 启动每日播报和预警监控
+            loop.create_task(handler.qwen.weather_service.start_weather_report(handler.qwen.weather_service.check_and_broadcast))
         
-        # 运行事件循环
-        loop.run_forever()
+        # 初始化摸鱼日历服务
+        moyu_service = MoyuCalendar(config)
+        moyu_service.wcf = wcf
+        # 启动摸鱼日历服务
+        if moyu_service.enabled:
+            logger.info("启动摸鱼日历服务...")
+            loop.create_task(moyu_service.start_moyu_calendar_service())
+        
+        # 主循环
+        while True:
+            try:
+                # 检查天气播报
+                if handler and handler.qwen and handler.qwen.weather_service:
+                    loop.run_until_complete(
+                        handler.qwen.weather_service.check_and_broadcast(
+                            list(handler.qwen.enabled_rooms)
+                        )
+                    )
+                
+                # 获取消息
+                msg = wcf.get_msg()
+                if msg:
+                    handle_message(wcf, msg, config, dnd_data)
+            except Empty:
+                continue
+            except Exception as e:
+                logger.error(f"获取消息时发生错误: {e}", exc_info=True)
+                
+            if not wcf.is_receiving_msg():
+                logger.error("消息接收功能已断开")
+                break
+            
+            time.sleep(0.1)
+            
     except KeyboardInterrupt:
         logger.info("收到停止信号，正在停止骰子机器人...")
     except Exception as e:
         logger.error(f"运行时发生错误: {e}", exc_info=True)
     finally:
-        if wcf:
-            wcf.disable_receiving_msg()
-            logger.info("已停止接收消息")
+        # 在程序退出前保存所有因命令更改的开关到配置文件
+        if handler and handler.qwen:
+            try:
+                import yaml
+                # 获取配置文件的完整路径
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                config_path = os.path.join(current_dir, "config.yaml")
+                
+                # 读取当前配置
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    # 使用RoundTripLoader保留注释和格式
+                    from ruamel.yaml import YAML
+                    yaml = YAML()
+                    yaml.preserve_quotes = True
+                    config = yaml.load(f)
+                
+                # 更新enabled_rooms和私聊功能状态
+                if 'ai' in config and 'qwen' in config['ai']:
+                    config['ai']['qwen']['group_chat']['enabled_rooms'] = list(handler.qwen.enabled_rooms)
+                    config['ai']['qwen']['private_chat']['enabled'] = handler.qwen.private_chat_enabled
+                    
+                    # 写回配置文件
+                    with open(config_path, 'w', encoding='utf-8') as f:
+                        yaml.dump(config, f)
+                    
+                    logger.info(f"程序退出前已保存AI功能状态:")
+                    logger.info(f"- 私聊功能: {'已启用' if handler.qwen.private_chat_enabled else '已禁用'}")
+                    logger.info(f"- 已启用群聊: {list(handler.qwen.enabled_rooms)}")
+            except Exception as e:
+                logger.error(f"保存群聊AI功能状态失败 ({config_path}): {e}", exc_info=True)
         
-        if handler:
-            logger.info("正在清理资源...")
+        wcf.cleanup()
+        logger.info("骰子机器人已停止")
 
 if __name__ == "__main__":
     main() 
