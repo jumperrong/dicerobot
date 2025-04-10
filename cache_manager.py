@@ -18,18 +18,20 @@ class CacheManager:
         os.makedirs(self.cache_root, exist_ok=True)
         
         # 各功能缓存目录
-        self.moyu_dir = os.path.join(self.cache_root, 'moyu')
         self.jrrp_dir = os.path.join(self.cache_root, 'jrrp')
         self.weather_dir = os.path.join(self.cache_root, 'weather')
         
         # 创建各功能缓存目录
-        for cache_dir in [self.moyu_dir, self.jrrp_dir, self.weather_dir]:
+        for cache_dir in [self.jrrp_dir, self.weather_dir]:
             os.makedirs(cache_dir, exist_ok=True)
             
         # 各功能缓存文件路径
-        self.moyu_broadcast_file = os.path.join(self.moyu_dir, 'broadcast_history.json')
         self.jrrp_broadcast_file = os.path.join(self.jrrp_dir, 'broadcast_history.json')
         self.weather_broadcast_file = os.path.join(self.weather_dir, 'broadcast_history.json')
+        
+        # 为了兼容性，创建临时目录
+        self.temp_dir = os.path.join(self.cache_root, 'temp')
+        os.makedirs(self.temp_dir, exist_ok=True)
         
         logger.info("缓存管理器初始化完成")
         logger.info(f"缓存根目录: {self.cache_root}")
@@ -38,7 +40,7 @@ class CacheManager:
         """加载指定功能的播报历史记录
         
         Args:
-            feature: 功能名称 ('moyu', 'jrrp', 'weather')
+            feature: 功能名称 ('jrrp', 'weather')
             
         Returns:
             Dict: 播报历史记录
@@ -76,7 +78,7 @@ class CacheManager:
         """保存指定功能的播报历史记录
         
         Args:
-            feature: 功能名称 ('moyu', 'jrrp', 'weather')
+            feature: 功能名称 ('jrrp', 'weather')
             data: 要保存的数据
             
         Returns:
@@ -113,7 +115,7 @@ class CacheManager:
         """获取指定功能的图片缓存目录
         
         Args:
-            feature: 功能名称 ('moyu', 'jrrp', 'weather')
+            feature: 功能名称 ('jrrp', 'weather')
             
         Returns:
             str: 图片缓存目录路径
@@ -139,7 +141,7 @@ class CacheManager:
         """清理指定功能的过期缓存文件
         
         Args:
-            feature: 功能名称 ('moyu', 'jrrp', 'weather')
+            feature: 功能名称 ('jrrp', 'weather')
             days: 过期天数
         """
         try:
