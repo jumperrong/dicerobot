@@ -192,7 +192,7 @@ def get_today_rp(user_id: str) -> Tuple[int, bool]:
     return rp_value, False
 
 def handle_jrrp_command(wcf: Wcf, msg: WxMsg, **kwargs) -> None:
-    """处理今日人品命令，从64卦中抽取一卦"""
+    """处理今日人品命令，随机从64卦或100签中抽取一个"""
     try:
         # 获取用户ID和日期
         user_id = msg.sender
@@ -230,56 +230,148 @@ def handle_jrrp_command(wcf: Wcf, msg: WxMsg, **kwargs) -> None:
         seed = f"{user_id}{today}".encode()
         random.seed(hashlib.md5(seed).hexdigest())
         
-        # 读取64卦数据
+        # 随机决定使用64卦还是100签
+        use_64_json = random.choice([True, False])
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        json_path = os.path.join(current_dir, "jrrp", "64.json")
         
-        try:
-            with open(json_path, 'r', encoding='utf-8') as f:
-                hexagrams = json.load(f)
+        if use_64_json:
+            # 使用64卦
+            # 道士风格的前缀文字
+            daoist_prefixes = [
+                "此间卜算有三规：一不问生死，二不断因果，三不违本心。施主可要启卦？",
+                "贫道袖中藏有文王金钱六枚，阁下可要掷卦问吉凶？",
+                "且将生辰八字写于黄符，待贫道踏罡步斗，请北斗星君照见命盘。",
+                "请施主默念所惑之事，待炉中沉香结篆，便是卦成之时。",
+                "紫微斗盘已悬于星幕之下，阁下可要随贫道观七政四余之躔度？"
+            ]
+            prefix = f"{random.choice(daoist_prefixes)}\n\n"
+            
+            # 读取64卦数据
+            json_path = os.path.join(current_dir, "jrrp", "64.json")
+            
+            try:
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    hexagrams = json.load(f)
+                    
+                # 随机选择一卦
+                hexagram_name = random.choice(list(hexagrams.keys()))
+                hexagram = hexagrams[hexagram_name]
                 
-            # 随机选择一卦
-            hexagram_name = random.choice(list(hexagrams.keys()))
-            hexagram = hexagrams[hexagram_name]
-            
-            # 缓存卦象
-            jrrp_cache[cache_key] = hexagram_name
-            
-            # 保存到缓存文件
-            save_jrrp_cache()
-            
-            # 获取卦象图片路径
-            image_path = os.path.join(current_dir, "jrrp", f"{hexagram_name}.jpg")
-            
-            # 获取用户昵称
-            nickname = get_user_display_name(wcf, user_id, msg.roomid)
-            
-            # 组织返回消息
-            reply = f"""🔮 今日卜卦：
+                # 缓存卦象
+                jrrp_cache[cache_key] = hexagram_name
+                
+                # 保存到缓存文件
+                save_jrrp_cache()
+                
+                # 获取卦象图片路径
+                image_path = os.path.join(current_dir, "jrrp", f"{hexagram_name}.jpg")
+                
+                # 获取用户昵称
+                nickname = get_user_display_name(wcf, user_id, msg.roomid)
+                
+                # 组织返回消息
+                reply = f"""{prefix}🔮 今日卜卦：
 👤 {nickname}
 📅 {datetime.now().strftime('%Y年%m月%d日')}
 🏮 {hexagram['title']}
 ⭐ 卦象评分：{hexagram['level']}
 📜 卦辞诗句：{hexagram['poem']}
 📝 解释：{hexagram['explanation']}"""
-            
-            # 发送消息和图片
-            if msg.roomid:
-                if os.path.exists(image_path):
-                    wcf.send_image(image_path, msg.roomid)
-                wcf.send_text(reply, msg.roomid)
-            else:
-                if os.path.exists(image_path):
-                    wcf.send_image(image_path, msg.sender)
-                wcf.send_text(reply, msg.sender)
                 
-        except FileNotFoundError:
-            logger.error(f"64卦数据文件未找到: {json_path}")
-            default_reply = "卦象数据未找到，请联系管理员。"
-            if msg.roomid:
-                wcf.send_text(default_reply, msg.roomid)
-            else:
-                wcf.send_text(default_reply, msg.sender)
+                # 发送消息和图片
+                if msg.roomid:
+                    # 先发送文本消息，再发送图片
+                    wcf.send_text(reply, msg.roomid)
+                    # 发送图片
+                    if os.path.exists(image_path):
+                        wcf.send_image(image_path, msg.roomid)
+                else:
+                    # 先发送文本消息，再发送图片
+                    wcf.send_text(reply, msg.sender)
+                    # 发送图片
+                    if os.path.exists(image_path):
+                        wcf.send_image(image_path, msg.sender)
+                    
+            except FileNotFoundError:
+                logger.error(f"64卦数据文件未找到: {json_path}")
+                default_reply = "卦象数据未找到，请联系管理员。"
+                if msg.roomid:
+                    wcf.send_text(default_reply, msg.roomid)
+                else:
+                    wcf.send_text(default_reply, msg.sender)
+        else:
+            # 使用100签
+            # 和尚风格的前缀文字
+            buddhist_prefixes = [
+                "施主且于佛前合十，待贫僧燃起旃檀，签筒自现因果。",
+                "檀越若问浮沉事，可随贫僧礼敬三宝，摇签时但观心念澄明。",
+                "此签筒承千年香火，施主默诵所求，贫僧为尔击磬引缘。",
+                "轻摇竹签如叩禅关，一响断妄，二响破执，三响贫僧为解如来意。",
+                "施主可合掌诵经三遍，贫僧为尔观此朱漆签筒灵应。"
+            ]
+            prefix = f"{random.choice(buddhist_prefixes)}\n\n"
+            
+            # 读取100签数据
+            json_path = os.path.join(current_dir, "jrrp", "100.json")
+            
+            try:
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    signs = json.load(f)
+                    
+                # 随机选择一签
+                sign = random.choice(signs)
+                
+                # 缓存签名
+                jrrp_cache[cache_key] = sign['result']
+                
+                # 保存到缓存文件
+                save_jrrp_cache()
+                
+                # 获取签文图片路径
+                if 'pic' in sign and len(sign['pic']) > 0:
+                    # 获取两张图片路径
+                    pic_paths = []
+                    for pic_name in sign['pic']:
+                        pic_path = os.path.join(current_dir, "jrrp", pic_name)
+                        if os.path.exists(pic_path):
+                            pic_paths.append(pic_path)
+                else:
+                    pic_paths = []
+                
+                # 获取用户昵称
+                nickname = get_user_display_name(wcf, user_id, msg.roomid)
+                
+                # 组织返回消息
+                reply = f"""{prefix}🔮 今日抽签：
+👤 {nickname}
+📅 {datetime.now().strftime('%Y年%m月%d日')}
+🏮 {sign['result']}
+📜 诗词：{sign['poetry']}
+📝 解释：{sign['interpretation']}
+💡 建议：{sign['suggestion']}
+🔯 运势详解：{sign['horoscope_details']}"""
+                
+                # 发送消息和图片
+                if msg.roomid:
+                    # 先发送文本消息，再发送图片
+                    wcf.send_text(reply, msg.roomid)
+                    # 发送图片
+                    for pic_path in pic_paths:
+                        wcf.send_image(pic_path, msg.roomid)
+                else:
+                    # 先发送文本消息，再发送图片
+                    wcf.send_text(reply, msg.sender)
+                    # 发送图片
+                    for pic_path in pic_paths:
+                        wcf.send_image(pic_path, msg.sender)
+                    
+            except FileNotFoundError:
+                logger.error(f"100签数据文件未找到: {json_path}")
+                default_reply = "签文数据未找到，请联系管理员。"
+                if msg.roomid:
+                    wcf.send_text(default_reply, msg.roomid)
+                else:
+                    wcf.send_text(default_reply, msg.sender)
             
     except Exception as e:
         logger.error(f"处理今日卜卦命令出错: {e}", exc_info=True)

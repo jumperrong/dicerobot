@@ -149,7 +149,7 @@ class CommandHandler:
                 handler=handle_jrrp_command,
                 needs_config=False,
                 needs_dnd_data=False,
-                description='查看今日人品值'
+                description='查看今日人品值（随机抽取易经64卦或浅水寺100签）'
             ),
             '.dnd': CommandInfo(
                 handler=handle_dnd_command,
