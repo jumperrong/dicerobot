@@ -397,25 +397,45 @@ def search_dnd2024_spell(dnd2024_data: list, keyword: str) -> str:
             
             # 格式化法术信息
             spell_info = f"🔮 【{spell.get('name_chinese', '')}】({spell.get('name_english', '')})\n"
-            spell_info += f"📊 {spell.get('school_and_level', '')}\n"
+            
+            # 显示环级和学派
+            level = spell.get('level', 0)
+            school = spell.get('school', '')
+            if level == 0:
+                spell_info += f"📊 戏法 {school}\n"
+            else:
+                spell_info += f"📊 {level}环 {school}\n"
+            
+            # 显示职业
+            classes = spell.get('classes', [])
+            if classes:
+                spell_info += f"👥 职业: {', '.join(classes)}\n"
+            
             spell_info += f"⏰ 施法时间: {spell.get('casting_time', '')}\n"
             spell_info += f"📏 距离: {spell.get('range', '')}\n"
             spell_info += f"🎯 成分: {spell.get('components', '')}\n"
-            spell_info += f"⏳ 持续时间: {spell.get('duration', '')}"
+            spell_info += f"⏳ 持续时间: {spell.get('duration', '')}\n"
             
-            if spell.get('description'):
-                spell_info += f"\n📝 描述: {spell.get('description', '')}"
+            # 显示描述
+            description = spell.get('description', '')
+            if description:
+                spell_info += f"📝 描述: {description}\n"
+            
+            # 显示升环效果
+            higher_level = spell.get('higher_level', '')
+            if higher_level:
+                spell_info += f"⬆️ 升环效果: {higher_level}\n"
             
             results.append(spell_info)
             
-            # 限制结果数量，避免刷屏
+            # 最多返回3个结果
             if len(results) >= 3:
                 break
     
     if not results:
-        return f"❌ 未找到与'{keyword}'相关的法术"
+        return f"❌ 未找到包含关键词 '{keyword}' 的法术"
     
-    return "\n\n".join(results)
+    return "\n" + "\n".join(results)
 
 def handle_dnd2024_command(wcf: Wcf, msg: WxMsg, dnd2024_data: list) -> None:
     """处理.dnd2024命令"""
