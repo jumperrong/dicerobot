@@ -204,6 +204,13 @@ def main():
         if not dnd_data:
             logger.error(f"D&D数据加载失败或为空")
         
+        # 加载DND 2024数据
+        dnd2024_data_file = config.get('files', {}).get('dnd2024_data', 'dnd5e_handbook_2024_spells.json')
+        dnd2024_data = load_dnd_data(dnd2024_data_file)
+        
+        if not dnd2024_data:
+            logger.error(f"D&D 2024数据加载失败或为空")
+        
         # 加载今日人品(jrrp)缓存
         from functions import load_jrrp_cache
         load_jrrp_cache()
@@ -260,7 +267,7 @@ def main():
                 # 获取消息
                 msg = wcf.get_msg()
                 if msg:
-                    handle_message(wcf, msg, config, dnd_data)
+                    handle_message(wcf, msg, config, dnd_data, dnd2024_data)
             except Empty:
                 continue
             except Exception as e:

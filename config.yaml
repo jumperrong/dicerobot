@@ -91,6 +91,7 @@ decks:
 files:
   deck_path: decks           # 牌堆文件目录
   dnd_data: DND5E23_4_2.json  # D&D规则数据文件
+  dnd2024_data: dnd5e_handbook_2024_spells.json  # D&D 2024年版法术数据文件
   log_file: logs/robot.log   # 机器人日志文件
 
 # 日志配置

@@ -6,13 +6,14 @@ from dataclasses import dataclass
 from wcferry import Wcf, WxMsg
 from weather import WeatherService
 from functions import (
+    get_user_display_name,
     handle_dicehelp_command,
     handle_jrrp_command,
     handle_dnd_command,
+    handle_dnd2024_command,
     handle_draw_command,
     handle_drawhelp_command,
-    handle_sys_command,
-    get_user_display_name
+    handle_sys_command
 )
 from dice_roller import process_roll_command, format_reply_message
 from ai_chat import QwenChat, handle_ai_chat
@@ -55,6 +56,7 @@ class CommandInfo:
     handler: Callable
     needs_config: bool
     needs_dnd_data: bool
+    needs_dnd2024_data: bool = False  # 新增：是否需要DND 2024数据
     description: str = ""
 
 class CommandHandler:
@@ -156,6 +158,13 @@ class CommandHandler:
                 needs_config=False,
                 needs_dnd_data=True,
                 description='查询D&D规则内容'
+            ),
+            '.dnd2024': CommandInfo(
+                handler=handle_dnd2024_command,
+                needs_config=False,
+                needs_dnd_data=False,
+                needs_dnd2024_data=True,
+                description='查询D&D 2024年版法术内容'
             ),
             '.dicehelp': CommandInfo(
                 handler=handle_dicehelp_command,
@@ -282,6 +291,7 @@ class CommandHandler:
 天气与工具:
 • .weather [城市] [3d/7d] - 查询天气
 • .dnd [关键词]   - 查询D&D规则
+• .dnd2024 [关键词] - 查询D&D 2024年版法术
 • .sys          - 显示机器人状态
 
 角色卡指令:
@@ -312,7 +322,7 @@ class CommandHandler:
         target = msg.roomid if msg.roomid else msg.sender
         wcf.send_text(help_text, target)
     
-    def execute_command(self, wcf: Wcf, msg: WxMsg, config: dict = None, dnd_data: dict = None) -> None:
+    def execute_command(self, wcf: Wcf, msg: WxMsg, config: dict = None, dnd_data: dict = None, dnd2024_data: dict = None) -> None:
         """执行命令"""
         try:
             command_info = self.get_command_info(msg.content)
@@ -327,6 +337,8 @@ class CommandHandler:
                 kwargs['config'] = config
             if command_info.needs_dnd_data:
                 kwargs['dnd_data'] = dnd_data
+            if command_info.needs_dnd2024_data:
+                kwargs['dnd2024_data'] = dnd2024_data
             
             handler = command_info.handler
             
@@ -1053,7 +1065,7 @@ class DiceRobot:
         except Exception as e:
             logger.error(f"处理角色卡命令失败: {e}")
 
-def handle_message(wcf: Wcf, msg: WxMsg, config: dict, dnd_data: dict) -> None:
+def handle_message(wcf: Wcf, msg: WxMsg, config: dict, dnd_data: dict, dnd2024_data: dict = None) -> None:
     """处理收到的消息"""
     try:
         # 获取消息显示设置
@@ -1095,7 +1107,7 @@ def handle_message(wcf: Wcf, msg: WxMsg, config: dict, dnd_data: dict) -> None:
             if msg.content.startswith('.'):
                 logger.debug(f"处理命令消息: {msg.content}")
                 try:
-                    handler.execute_command(wcf, msg, config, dnd_data)
+                    handler.execute_command(wcf, msg, config, dnd_data, dnd2024_data)
                     logger.debug(f"命令处理完成: {msg.content}")
                 except Exception as e:
                     logger.error(f"命令处理失败: {msg.content} - {e}", exc_info=True)

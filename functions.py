@@ -380,6 +380,90 @@ def handle_jrrp_command(wcf: Wcf, msg: WxMsg, **kwargs) -> None:
         else:
             wcf.send_text("处理命令时出错，请稍后重试", msg.sender)
 
+def search_dnd2024_spell(dnd2024_data: list, keyword: str) -> str:
+    """搜索D&D 2024年版法术"""
+    keyword = keyword.lower().strip()
+    results = []
+    
+    logger.debug(f"开始搜索D&D 2024法术，关键词: '{keyword}'")
+    
+    for spell in dnd2024_data:
+        # 搜索中文名、英文名、学派、职业、等级等字段
+        if (keyword in spell.get('name_chinese', '').lower() or
+            keyword in spell.get('name_english', '').lower() or
+            keyword in spell.get('school', '').lower() or
+            keyword in str(spell.get('level', '')).lower() or
+            any(keyword in cls.lower() for cls in spell.get('classes', []))):
+            
+            # 格式化法术信息
+            spell_info = f"🔮 【{spell.get('name_chinese', '')}】({spell.get('name_english', '')})\n"
+            spell_info += f"📊 {spell.get('school_and_level', '')}\n"
+            spell_info += f"⏰ 施法时间: {spell.get('casting_time', '')}\n"
+            spell_info += f"📏 距离: {spell.get('range', '')}\n"
+            spell_info += f"🎯 成分: {spell.get('components', '')}\n"
+            spell_info += f"⏳ 持续时间: {spell.get('duration', '')}"
+            
+            if spell.get('description'):
+                spell_info += f"\n📝 描述: {spell.get('description', '')}"
+            
+            results.append(spell_info)
+            
+            # 限制结果数量，避免刷屏
+            if len(results) >= 3:
+                break
+    
+    if not results:
+        return f"❌ 未找到与'{keyword}'相关的法术"
+    
+    return "\n\n".join(results)
+
+def handle_dnd2024_command(wcf: Wcf, msg: WxMsg, dnd2024_data: list) -> None:
+    """处理.dnd2024命令"""
+    try:
+        # 检查数据是否为空
+        if not dnd2024_data:
+            error_msg = "❌ D&D 2024法术数据未加载或为空"
+            if msg.roomid:
+                wcf.send_text(error_msg, msg.roomid)
+            else:
+                wcf.send_text(error_msg, msg.sender)
+            return
+        
+        keyword = msg.content.split('.dnd2024', 1)[1].strip()
+        
+        if not keyword:
+            reply = """🔮 D&D 2024年版法术查询
+请输入要查询的关键词，例如：
+• .dnd2024 火球术
+• .dnd2024 治疗轻伤
+• .dnd2024 法师
+• .dnd2024 戏法
+• .dnd2024 塑能"""
+        else:
+            # 获取用户昵称
+            nickname = get_user_display_name(wcf, msg.sender, msg.roomid)
+            
+            # 进行查询并格式化结果
+            result = search_dnd2024_spell(dnd2024_data, keyword)
+            reply = f"""🔍 D&D 2024年版法术查询:
+👤 {nickname}
+🔎 关键词: {keyword}
+
+{result}"""
+        
+        if msg.roomid:
+            wcf.send_text(reply, msg.roomid)
+        else:
+            wcf.send_text(reply, msg.sender)
+            
+    except Exception as e:
+        logger.error(f"处理.dnd2024命令出错: {e}", exc_info=True)
+        error_msg = "❌ 查询D&D 2024法术时出错"
+        if msg.roomid:
+            wcf.send_text(error_msg, msg.roomid)
+        else:
+            wcf.send_text(error_msg, msg.sender)
+
 def search_dnd_term(dnd_data: dict, keyword: str) -> str:
     """搜索D&D词条"""
     keyword = keyword.lower().strip()
