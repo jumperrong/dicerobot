@@ -205,7 +205,7 @@ def main():
             logger.error(f"D&D数据加载失败或为空")
         
         # 加载DND 2024数据
-        dnd2024_data_file = config.get('files', {}).get('dnd2024_data', 'dnd5e_handbook_2024_spells.json')
+        dnd2024_data_file = config.get('files', {}).get('dnd2024_data', 'dnd2024.json')
         dnd2024_data = load_dnd_data(dnd2024_data_file)
         
         if not dnd2024_data:
