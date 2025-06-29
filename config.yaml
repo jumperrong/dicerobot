@@ -15,6 +15,7 @@ ai:
       - 52124509585@chatroom
       - 52275509390@chatroom
       - 56168799809@chatroom
+      - 57154809906@chatroom
     logging:
       show_messages: true  # 是否显示消息日志
       file:
