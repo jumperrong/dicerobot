@@ -164,7 +164,7 @@ class CommandHandler:
                 needs_config=False,
                 needs_dnd_data=False,
                 needs_dnd2024_data=True,
-                description='查询D&D 2024年版法术内容'
+                description='查询D&D 2024年版数据'
             ),
             '.dicehelp': CommandInfo(
                 handler=handle_dicehelp_command,
@@ -291,7 +291,7 @@ class CommandHandler:
 天气与工具:
 • .weather [城市] [3d/7d] - 查询天气
 • .dnd [关键词]   - 查询D&D规则
-• .dnd2024 [关键词] - 查询D&D 2024年版法术
+• .dnd2024 [关键词] - 查询D&D 2024年版数据
 • .sys          - 显示机器人状态
 
 角色卡指令:
