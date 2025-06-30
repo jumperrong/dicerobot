@@ -256,14 +256,6 @@ def main():
         # 主循环
         while True:
             try:
-                # 检查天气播报
-                if handler and handler.qwen and handler.qwen.weather_service:
-                    loop.run_until_complete(
-                        handler.qwen.weather_service.check_and_broadcast(
-                            list(handler.qwen.enabled_rooms)
-                        )
-                    )
-                
                 # 获取消息
                 msg = wcf.get_msg()
                 if msg:
