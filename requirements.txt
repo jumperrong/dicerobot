@@ -7,19 +7,34 @@ requests>=2.32.3
 # AI和天气服务
 dashscope>=1.20.14     # 通义千问API
 aiohttp>=3.11.10       # 异步HTTP客户端，用于天气服务
+PyJWT>=2.8.0           # JWT库，用于和风天气JWT认证
+cryptography>=41.0.0   # 加密库，用于Ed25519签名
 
 # 系统和监控
 psutil>=5.9.6         # 系统资源监控
-
-# 日志和工具
-python-logging>=0.4.9.6
-
-# 其他依赖
-random2>=1.0.1         # 随机数生成
-datetime>=5.2         # 日期时间处理
-hashlib>=20081119     # 哈希函数
 
 # 开发工具
 pytest>=7.4.3         # 测试框架
 black>=23.11.0        # 代码格式化
 pylint>=3.0.2         # 代码检查
+
+# 注意：以下模块是Python标准库的一部分，不需要单独安装
+# - logging (标准库)
+# - os (标准库)
+# - json (标准库)
+# - sqlite3 (标准库)
+# - datetime (标准库)
+# - typing (标准库)
+# - dataclasses (标准库)
+# - asyncio (标准库)
+# - random (标准库)
+# - re (标准库)
+# - hashlib (标准库)
+# - time (标准库)
+# - threading (标准库)
+# - queue (标准库)
+# - shutil (标准库)
+# - pathlib (标准库)
+# - xml.etree.ElementTree (标准库)
+# - functools (标准库)
+# - contextlib (标准库)

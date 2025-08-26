@@ -6,6 +6,8 @@ from typing import Optional, Dict, List, Any, Union
 import json
 import hashlib
 import os
+import time
+import jwt
 from cache_manager import cache_manager
 
 logger = logging.getLogger(__name__)
@@ -29,6 +31,14 @@ class WeatherService:
         self._last_save_time = None  # 上次保存时间
         self._save_interval = 300  # 保存间隔（秒），改为5分钟
         
+        # JWT认证配置
+        self.jwt_config = config.get('jwt', {})
+        self.jwt_token = None
+        self.jwt_expires_at = None
+        
+        # SSL配置
+        self.ssl_verify = config.get('ssl', {}).get('verify', True)  # 是否验证SSL证书
+        
         # 从配置中获取已启用的群聊
         if 'group_chat' in config:
             enabled_rooms = config['group_chat'].get('enabled_rooms', [])
@@ -48,8 +58,8 @@ class WeatherService:
         logger.debug(f"已加载预警缓存: {len(self.warning_cache)} 条记录")
         
         # 验证配置
-        if not self.api_key:
-            logger.error("未配置天气API密钥")
+        if not self.api_key and not self.jwt_config:
+            logger.error("未配置天气API密钥或JWT认证信息")
         if not self.api_urls:
             logger.error("未配置天气API地址")
         
@@ -57,10 +67,20 @@ class WeatherService:
         self.retry_count = config.get('retry', {}).get('count', 3)
         self.retry_delay = config.get('retry', {}).get('delay', 1)
         
+        # 初始化JWT Token（如果配置了JWT）
+        if self.jwt_config:
+            self.jwt_token = self._generate_jwt_token()
+            if self.jwt_token:
+                self.jwt_expires_at = time.time() + 900
+                logger.info("JWT认证已初始化")
+            else:
+                logger.warning("JWT认证初始化失败，将使用API KEY认证")
+        
         logger.info(f"天气服务初始化完成:")
         logger.info(f"- 默认城市: {self.default_city}")
         logger.info(f"- 播报时间: {', '.join(f'{h:02d}:{m:02d}' for h, m in self.broadcast_times)}")
         logger.info(f"- 预警功能: {'已启用' if self.warning_config.get('enabled') else '未启用'}")
+        logger.info(f"- 认证方式: {'JWT' if self.jwt_token else 'API KEY'}")
         if self.enabled_rooms:
             logger.info(f"- 已启用群聊: {len(self.enabled_rooms)}个")
             for room in self.enabled_rooms:
@@ -90,15 +110,87 @@ class WeatherService:
         
         return sorted(broadcast_times)  # 按时间排序
     
+    def _generate_jwt_token(self) -> Optional[str]:
+        """生成JWT Token"""
+        try:
+            if not self.jwt_config:
+                return None
+                
+            private_key = self.jwt_config.get('private_key')
+            project_id = self.jwt_config.get('project_id')
+            key_id = self.jwt_config.get('key_id')
+            
+            if not all([private_key, project_id, key_id]):
+                logger.error("JWT配置不完整，缺少private_key、project_id或key_id")
+                return None
+            
+            # 设置JWT payload
+            current_time = int(time.time())
+            payload = {
+                'sub': project_id,
+                'iat': current_time - 30,  # 提前30秒生效，防止时间误差
+                'exp': current_time + 900  # 15分钟后过期
+            }
+            
+            # 设置JWT header
+            headers = {
+                'alg': 'EdDSA',
+                'kid': key_id
+            }
+            
+            # 生成JWT
+            token = jwt.encode(payload, private_key, algorithm='EdDSA', headers=headers)
+            return token
+            
+        except Exception as e:
+            logger.error(f"生成JWT Token失败: {e}")
+            return None
+    
+    def _get_auth_headers(self) -> dict:
+        """获取认证头信息"""
+        headers = {}
+        
+        # 优先使用JWT认证
+        if self.jwt_config and self.jwt_token:
+            # 检查JWT是否过期
+            if self.jwt_expires_at and time.time() >= self.jwt_expires_at:
+                # JWT已过期，重新生成
+                self.jwt_token = self._generate_jwt_token()
+                if self.jwt_token:
+                    self.jwt_expires_at = time.time() + 900  # 15分钟后过期
+            
+            if self.jwt_token:
+                headers['Authorization'] = f'Bearer {self.jwt_token}'
+                return headers
+        
+        # 回退到API KEY认证
+        if self.api_key:
+            headers['X-QW-Api-Key'] = self.api_key
+        
+        return headers
+    
     async def _make_request(self, url: str, params: dict) -> Optional[dict]:
         """发送API请求，支持重试机制"""
         last_error = None
         
         for attempt in range(self.retry_count):
             try:
-                async with aiohttp.ClientSession() as session:
-                    params['key'] = self.api_key
-                    async with session.get(url, params=params, timeout=10) as response:
+                # 创建SSL上下文
+                if not self.ssl_verify:
+                    # 如果禁用SSL验证，创建不验证证书的连接器
+                    connector = aiohttp.TCPConnector(ssl=False)
+                    session = aiohttp.ClientSession(connector=connector)
+                else:
+                    session = aiohttp.ClientSession()
+                
+                async with session:
+                    # 获取认证头信息
+                    headers = self._get_auth_headers()
+                    
+                    # 认证信息已通过headers传递，不需要在参数中添加key
+                    # 这样可以避免双重认证导致的身份认证失败
+                    
+                    async with session.get(url, params=params, headers=headers, timeout=10) as response:
                         if response.status == 200:
                             return await response.json()
                         

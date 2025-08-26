@@ -34,19 +34,39 @@ ai:
 
     # 天气功能配置
     weather:
-      api_key: 01db076f4a924b51b3fab4725dcf380e  # 和风天气API密钥
+      api_key: 01db076f4a924b51b3fab4725dcf380e  # 和风天气API密钥（备用）
+      
+      # JWT认证配置（推荐使用，更安全）
+      jwt:
+        # private_key: "-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----END PRIVATE KEY-----"  # Ed25519私钥
+        # project_id: "YOUR_PROJECT_ID"  # 项目ID
+        # key_id: "YOUR_KEY_ID"  # 凭据ID
+      
       # API请求重试配置
       retry:
         count: 3    # 最大重试次数
         delay: 3    # 基础重试延迟(秒)
+      
+      # SSL配置
+      ssl:
+        verify: false  # 是否验证SSL证书（设为false可解决证书验证失败问题）
       # 天气API接口地址
       api_urls:
-        geo: https://geoapi.qweather.com/v2/city/lookup          # 城市查询
-        indices: https://devapi.qweather.com/v7/indices/1d       # 生活指数
-        warning: https://devapi.qweather.com/v7/warning/now      # 天气预警
-        weather: https://devapi.qweather.com/v7/weather/now      # 实时天气
-        weather_3d: https://devapi.qweather.com/v7/weather/3d    # 3天预报
-        weather_7d: https://devapi.qweather.com/v7/weather/7d    # 7天预报
+        # 使用自定义API Host（根据和风天气公告要求）
+        geo: https://qg6yvwetrh.re.qweatherapi.com/geo/v2/city/lookup          # 城市查询
+        indices: https://qg6yvwetrh.re.qweatherapi.com/v7/indices/1d       # 生活指数
+        warning: https://qg6yvwetrh.re.qweatherapi.com/v7/warning/now      # 天气预警
+        weather: https://qg6yvwetrh.re.qweatherapi.com/v7/weather/now      # 实时天气
+        weather_3d: https://qg6yvwetrh.re.qweatherapi.com/v7/weather/3d    # 3天预报
+        weather_7d: https://qg6yvwetrh.re.qweatherapi.com/v7/weather/7d    # 7天预报
+        
+        # 备用：默认和风天气API地址（将在2026年停止服务）
+        # geo: https://geoapi.qweather.com/v2/city/lookup          # 城市查询
+        # indices: https://devapi.qweather.com/v7/indices/1d       # 生活指数
+        # warning: https://devapi.qweather.com/v7/warning/now      # 天气预警
+        # weather: https://devapi.qweather.com/v7/weather/now      # 实时天气
+        # weather_3d: https://devapi.qweather.com/v7/weather/3d    # 3天预报
+        # weather_7d: https://devapi.qweather.com/v7/weather/7d    # 7天预报
 
       # 定时播报配置
       daily_report:
